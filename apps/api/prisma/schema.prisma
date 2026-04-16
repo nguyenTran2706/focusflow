@@ -1,0 +1,160 @@
+// FocusFlow — API data model
+// Read-first pass: auth + workspaces (milestone 1) plus all Kanban tables
+// scaffolded now so milestone 2 doesn't need a second migration wave.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Identity ────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships Membership[]
+  invitesSent Invite[]     @relation("InviteSender")
+  cardsAuthored Card[]     @relation("CardAuthor")
+  comments    Comment[]
+
+  @@map("users")
+}
+
+// ─── Tenancy ────────────────────────────────────────────────────────────────
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      Plan     @default(FREE)
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships Membership[]
+  boards      Board[]
+  invites     Invite[]
+
+  @@map("workspaces")
+}
+
+enum Plan {
+  FREE
+  PRO
+  TEAM
+}
+
+model Membership {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        Role     @default(MEMBER)
+  createdAt   DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+  @@map("memberships")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Invite {
+  id          String   @id @default(cuid())
+  email       String
+  token       String   @unique
+  workspaceId String
+  role        Role     @default(MEMBER)
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InviteSender", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([email])
+  @@map("invites")
+}
+
+// ─── Kanban ─────────────────────────────────────────────────────────────────
+
+model Board {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  columns   BoardColumn[]
+
+  @@index([workspaceId])
+  @@map("boards")
+}
+
+model BoardColumn {
+  id       String  @id @default(cuid())
+  boardId  String
+  name     String
+  // fractional-rank string for cheap reorder without renumbering neighbours
+  rank     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@index([boardId, rank])
+  @@map("board_columns")
+}
+
+model Card {
+  id        String   @id @default(cuid())
+  columnId  String
+  authorId  String
+  title     String
+  body      String?
+  rank      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  column   BoardColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  author   User        @relation("CardAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  @@index([columnId, rank])
+  @@map("cards")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  cardId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  card   Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@map("comments")
+}
