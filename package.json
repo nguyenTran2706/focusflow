@@ -1,0 +1,20 @@
+{
+  "name": "focusflow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Team productivity SaaS — Kanban boards with real-time collaboration, AI assistance, and Stripe billing",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w apps/web",
+    "dev:api": "npm run start:dev -w apps/api",
+    "dev:ai": "npm run start:dev -w apps/ai-worker",
+    "build": "npm run build -w apps/web && npm run build -w apps/api && npm run build -w apps/ai-worker",
+    "test": "npm test -w apps/web && npm test -w apps/api && npm test -w apps/ai-worker",
+    "lint": "npm run lint -w apps/web && npm run lint -w apps/api && npm run lint -w apps/ai-worker"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
