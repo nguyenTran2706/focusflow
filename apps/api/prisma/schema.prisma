@@ -3,12 +3,12 @@
 // scaffolded now so milestone 2 doesn't need a second migration wave.
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ─── Identity ────────────────────────────────────────────────────────────────

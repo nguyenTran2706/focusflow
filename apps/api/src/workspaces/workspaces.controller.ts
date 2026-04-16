@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { WorkspacesService } from './workspaces.service.js';
@@ -30,10 +23,7 @@ export class WorkspacesController {
   }
 
   @Get(':id')
-  findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: { userId: string },
-  ) {
+  findOne(@Param('id') id: string, @CurrentUser() user: { userId: string }) {
     return this.workspaces.findOneOrFail(id, user.userId);
   }
 
