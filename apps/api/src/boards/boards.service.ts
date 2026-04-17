@@ -29,9 +29,21 @@ export class BoardsService {
 
   async createBoard(workspaceId: string, dto: CreateBoardDto, userId: string) {
     await this.assertMember(workspaceId, userId);
+
+    // Create board with 3 default Jira-style columns
     return this.prisma.board.create({
-      data: { workspaceId, name: dto.name },
-      include: { columns: { include: { cards: true } } },
+      data: {
+        workspaceId,
+        name: dto.name,
+        columns: {
+          create: [
+            { name: 'To Do', rank: '0' },
+            { name: 'In Progress', rank: '1' },
+            { name: 'Done', rank: '2' },
+          ],
+        },
+      },
+      include: { columns: { include: { cards: true }, orderBy: { rank: 'asc' } } },
     });
   }
 

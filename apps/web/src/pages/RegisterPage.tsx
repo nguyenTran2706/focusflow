@@ -1,8 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../lib/api';
 import { useAuthStore } from '../lib/auth-store';
-import './AuthPage.css';
 
 export function RegisterPage() {
   const [name, setName] = useState('');
@@ -13,16 +12,16 @@ export function RegisterPage() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const res = await api.post<{ accessToken: string; user: { id: string; email: string } }>(
+      const res = await api.post<{ accessToken: string; user: { id: string; email: string; name: string } }>(
         '/auth/register',
         { name, email, password },
       );
-      setAuth(res.accessToken, { ...res.user, name });
+      setAuth(res.accessToken, res.user);
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Something went wrong');
@@ -32,37 +31,31 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-bg">
-        <div className="auth-bg-orb auth-bg-orb-1" />
-        <div className="auth-bg-orb auth-bg-orb-2" />
-        <div className="auth-bg-orb auth-bg-orb-3" />
-      </div>
-
-      <div className="auth-card glass animate-slide-up">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="2" width="8" height="8" rx="2" fill="#8b5cf6" />
-              <rect x="14" y="2" width="8" height="8" rx="2" fill="#a78bfa" opacity="0.7" />
-              <rect x="2" y="14" width="8" height="8" rx="2" fill="#a78bfa" opacity="0.5" />
-              <rect x="14" y="14" width="8" height="8" rx="2" fill="#c4b5fd" opacity="0.3" />
+    <div className="min-h-screen flex items-center justify-center p-6 bg-bg-root">
+      <div className="w-full max-w-[380px] bg-bg-surface border border-border-subtle rounded-xl p-8">
+        <div className="flex items-center gap-[10px] mb-8">
+          <div className="w-[36px] h-[36px] flex items-center justify-center bg-accent rounded-md">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#fff" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#fff" opacity="0.6" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#fff" opacity="0.6" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#fff" opacity="0.3" />
             </svg>
           </div>
-          <span>FocusFlow</span>
+          <span className="text-[1.15rem] font-bold text-text-primary">FocusFlow</span>
         </div>
 
-        <h1>Create account</h1>
-        <p className="auth-subtitle">Get started with your free workspace</p>
+        <h1 className="text-[1.35rem] mb-1">Create account</h1>
+        <p className="text-text-secondary text-[0.875rem] mb-6">Start with a free workspace</p>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="auth-error">{error}</div>}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {error && <div className="py-[10px] px-[12px] rounded-md bg-[rgba(248,113,113,0.08)] border border-[rgba(248,113,113,0.15)] text-danger text-[0.8rem]">{error}</div>}
 
-          <div className="input-group">
+          <div className="flex flex-col gap-[6px] [&>label]:text-[0.8rem] [&>label]:font-medium [&>label]:text-text-secondary">
             <label htmlFor="name">Full name</label>
             <input
               id="name"
-              className="input"
+              className="px-3 py-[9px] rounded-md border border-border-subtle bg-bg-input text-text-primary text-[0.875rem] transition-colors outline-none focus:border-border-focus placeholder:text-text-muted w-full"
               type="text"
               placeholder="Jane Doe"
               value={name}
@@ -72,24 +65,24 @@ export function RegisterPage() {
             />
           </div>
 
-          <div className="input-group">
+          <div className="flex flex-col gap-[6px] [&>label]:text-[0.8rem] [&>label]:font-medium [&>label]:text-text-secondary">
             <label htmlFor="email">Email</label>
             <input
               id="email"
-              className="input"
+              className="px-3 py-[9px] rounded-md border border-border-subtle bg-bg-input text-text-primary text-[0.875rem] transition-colors outline-none focus:border-border-focus placeholder:text-text-muted w-full"
               type="email"
-              placeholder="you@example.com"
+              placeholder="you@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
 
-          <div className="input-group">
+          <div className="flex flex-col gap-[6px] [&>label]:text-[0.8rem] [&>label]:font-medium [&>label]:text-text-secondary">
             <label htmlFor="password">Password</label>
             <input
               id="password"
-              className="input"
+              className="px-3 py-[9px] rounded-md border border-border-subtle bg-bg-input text-text-primary text-[0.875rem] transition-colors outline-none focus:border-border-focus placeholder:text-text-muted w-full"
               type="password"
               placeholder="Min. 8 characters"
               value={password}
@@ -99,13 +92,13 @@ export function RegisterPage() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
-            {loading ? <span className="auth-spinner" /> : null}
+          <button type="submit" className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-accent text-white hover:bg-[#5558e6] w-full disabled:opacity-40 disabled:cursor-not-allowed" disabled={loading}>
+            {loading ? <span className="inline-block w-4 h-4 border-2 border-white/25 border-t-white rounded-full animate-spin-fast" /> : null}
             {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
-        <p className="auth-footer">
+        <p className="mt-6 text-center text-[0.85rem] text-text-secondary [&>a]:font-medium">
           Already have an account? <Link to="/login">Sign in</Link>
         </p>
       </div>

@@ -1,0 +1,16 @@
+services:
+  db:
+    image: mongo:7
+    container_name: focusflow-db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: focusflow
+      MONGO_INITDB_ROOT_PASSWORD: focusflow
+      MONGO_INITDB_DATABASE: focusflow
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  mongodata:
