@@ -71,6 +71,107 @@ export class WorkspacesService {
     return workspace;
   }
 
+  // ── Members ───────────────────────────────────────────────────────────────
+
+  async listMembers(workspaceId: string, userId: string) {
+    await this.findOneOrFail(workspaceId, userId);
+    const memberships = await this.prisma.membership.findMany({
+      where: { workspaceId },
+      include: { user: { select: { id: true, name: true, email: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return memberships.map((m) => ({
+      id: m.user.id,
+      name: m.user.name,
+      email: m.user.email,
+      role: m.role,
+    }));
+  }
+
+  // ── Summary ──────────────────────────────────────────────────────────────
+
+  async getSummary(workspaceId: string, userId: string) {
+    await this.findOneOrFail(workspaceId, userId);
+
+    const boards = await this.prisma.board.findMany({
+      where: { workspaceId },
+      include: {
+        columns: {
+          include: {
+            cards: {
+              include: {
+                author: { select: { id: true, name: true } },
+                assignee: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const allCards = boards.flatMap((b) =>
+      b.columns.flatMap((col) =>
+        col.cards.map((card) => ({ ...card, columnName: col.name })),
+      ),
+    );
+
+    const statusCounts: Record<string, number> = {};
+    const priorityCounts: Record<string, number> = { urgent: 0, high: 0, medium: 0, low: 0, none: 0 };
+    const typeCounts: Record<string, number> = {};
+    let completedRecently = 0;
+    let updatedRecently = 0;
+    let createdRecently = 0;
+    let dueSoon = 0;
+
+    for (const card of allCards) {
+      const colLower = card.columnName.toLowerCase().trim();
+      statusCounts[card.columnName] = (statusCounts[card.columnName] ?? 0) + 1;
+
+      if (card.priority && card.priority in priorityCounts) {
+        priorityCounts[card.priority]++;
+      } else {
+        priorityCounts['none']++;
+      }
+
+      const t = card.type ?? 'task';
+      typeCounts[t] = (typeCounts[t] ?? 0) + 1;
+
+      const isDone = colLower === 'done' || colLower === 'complete' || colLower === 'completed';
+      if (isDone && card.updatedAt >= sevenDaysAgo) completedRecently++;
+      if (card.updatedAt >= sevenDaysAgo) updatedRecently++;
+      if (card.createdAt >= sevenDaysAgo) createdRecently++;
+      if (card.dueDate && card.dueDate <= sevenDaysFromNow && card.dueDate >= now && !isDone) dueSoon++;
+    }
+
+    const recentActivity = allCards
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 10)
+      .map((c) => ({
+        cardId: c.id,
+        title: c.title,
+        columnName: c.columnName,
+        author: c.author,
+        updatedAt: c.updatedAt,
+        createdAt: c.createdAt,
+      }));
+
+    return {
+      totalCards: allCards.length,
+      completedRecently,
+      updatedRecently,
+      createdRecently,
+      dueSoon,
+      statusCounts,
+      priorityCounts,
+      typeCounts,
+      recentActivity,
+    };
+  }
+
   // ── Invite ────────────────────────────────────────────────────────────────
 
   async invite(

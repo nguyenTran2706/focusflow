@@ -8,7 +8,9 @@ import {
   CreateBoardDto,
   CreateColumnDto,
   CreateCardDto,
+  UpdateCardDto,
   MoveCardDto,
+  CreateCommentDto,
 } from './dto/index.js';
 
 @Injectable()
@@ -69,6 +71,7 @@ export class BoardsService {
               orderBy: { rank: 'asc' },
               include: {
                 author: { select: { id: true, name: true } },
+                assignee: { select: { id: true, name: true } },
                 _count: { select: { comments: true } },
               },
             },
@@ -126,10 +129,61 @@ export class BoardsService {
         authorId: userId,
         title: dto.title,
         body: dto.body,
+        type: dto.type ?? 'task',
+        priority: dto.priority,
+        labels: dto.labels ?? [],
+        assigneeId: dto.assigneeId,
+        dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
         rank,
       },
       include: {
         author: { select: { id: true, name: true } },
+        assignee: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  async getCard(cardId: string, userId: string) {
+    const card = await this.prisma.card.findUniqueOrThrow({
+      where: { id: cardId },
+      include: {
+        column: { include: { board: true } },
+        author: { select: { id: true, name: true } },
+        assignee: { select: { id: true, name: true } },
+        comments: {
+          orderBy: { createdAt: 'asc' },
+          include: { author: { select: { id: true, name: true } } },
+        },
+        _count: { select: { comments: true } },
+      },
+    });
+    await this.assertMember(card.column.board.workspaceId, userId);
+    return card;
+  }
+
+  async updateCard(cardId: string, dto: UpdateCardDto, userId: string) {
+    const card = await this.prisma.card.findUniqueOrThrow({
+      where: { id: cardId },
+      include: { column: { include: { board: true } } },
+    });
+    await this.assertMember(card.column.board.workspaceId, userId);
+
+    return this.prisma.card.update({
+      where: { id: cardId },
+      data: {
+        ...(dto.title !== undefined && { title: dto.title }),
+        ...(dto.body !== undefined && { body: dto.body }),
+        ...(dto.type !== undefined && { type: dto.type }),
+        ...(dto.priority !== undefined && { priority: dto.priority }),
+        ...(dto.labels !== undefined && { labels: dto.labels }),
+        ...(dto.assigneeId !== undefined && { assigneeId: dto.assigneeId || null }),
+        ...(dto.dueDate !== undefined && { dueDate: dto.dueDate ? new Date(dto.dueDate) : null }),
+        ...(dto.startDate !== undefined && { startDate: dto.startDate ? new Date(dto.startDate) : null }),
+      },
+      include: {
+        author: { select: { id: true, name: true } },
+        assignee: { select: { id: true, name: true } },
+        _count: { select: { comments: true } },
       },
     });
   }
@@ -158,5 +212,38 @@ export class BoardsService {
     await this.assertMember(card.column.board.workspaceId, userId);
 
     return this.prisma.card.delete({ where: { id: cardId } });
+  }
+
+  // ── Comments ──────────────────────────────────────────────────────────────
+
+  async listComments(cardId: string, userId: string) {
+    const card = await this.prisma.card.findUniqueOrThrow({
+      where: { id: cardId },
+      include: { column: { include: { board: true } } },
+    });
+    await this.assertMember(card.column.board.workspaceId, userId);
+
+    return this.prisma.comment.findMany({
+      where: { cardId },
+      orderBy: { createdAt: 'asc' },
+      include: { author: { select: { id: true, name: true } } },
+    });
+  }
+
+  async createComment(cardId: string, dto: CreateCommentDto, userId: string) {
+    const card = await this.prisma.card.findUniqueOrThrow({
+      where: { id: cardId },
+      include: { column: { include: { board: true } } },
+    });
+    await this.assertMember(card.column.board.workspaceId, userId);
+
+    return this.prisma.comment.create({
+      data: {
+        cardId,
+        authorId: userId,
+        body: dto.body,
+      },
+      include: { author: { select: { id: true, name: true } } },
+    });
   }
 }

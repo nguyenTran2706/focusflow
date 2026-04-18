@@ -27,6 +27,22 @@ export class WorkspacesController {
     return this.workspaces.findOneOrFail(id, user.userId);
   }
 
+  @Get(':id/members')
+  listMembers(
+    @Param('id') id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.workspaces.listMembers(id, user.userId);
+  }
+
+  @Get(':id/summary')
+  getSummary(
+    @Param('id') id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.workspaces.getSummary(id, user.userId);
+  }
+
   @Post(':id/invites')
   invite(
     @Param('id') id: string,

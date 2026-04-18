@@ -15,7 +15,9 @@ import {
   CreateBoardDto,
   CreateColumnDto,
   CreateCardDto,
+  UpdateCardDto,
   MoveCardDto,
+  CreateCommentDto,
 } from './dto/index.js';
 
 @UseGuards(JwtAuthGuard)
@@ -72,6 +74,23 @@ export class BoardsController {
     return this.boards.createCard(columnId, dto, user.userId);
   }
 
+  @Get('cards/:cardId')
+  getCard(
+    @Param('cardId') cardId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.getCard(cardId, user.userId);
+  }
+
+  @Patch('cards/:cardId')
+  updateCard(
+    @Param('cardId') cardId: string,
+    @Body() dto: UpdateCardDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.updateCard(cardId, dto, user.userId);
+  }
+
   @Patch('cards/:cardId/move')
   moveCard(
     @Param('cardId') cardId: string,
@@ -87,5 +106,24 @@ export class BoardsController {
     @CurrentUser() user: { userId: string },
   ) {
     return this.boards.deleteCard(cardId, user.userId);
+  }
+
+  // ── Comments ──────────────────────────────────────────────────────────────
+
+  @Get('cards/:cardId/comments')
+  listComments(
+    @Param('cardId') cardId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.listComments(cardId, user.userId);
+  }
+
+  @Post('cards/:cardId/comments')
+  createComment(
+    @Param('cardId') cardId: string,
+    @Body() dto: CreateCommentDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.createComment(cardId, dto, user.userId);
   }
 }

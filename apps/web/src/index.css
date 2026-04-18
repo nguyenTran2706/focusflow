@@ -40,17 +40,23 @@
   --spacing-12: 48px;
   --spacing-16: 64px;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Comfortaa', system-ui, -apple-system, sans-serif;
   
   --spacing-sidebar: 240px;
   --spacing-topnav: 52px;
 
   --animate-fade-in: fadeIn 0.25s ease both;
   --animate-spin-fast: spin 0.5s linear infinite;
+  --animate-slide-in-right: slideInRight 0.25s cubic-bezier(0.16,1,0.3,1) both;
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 }
 

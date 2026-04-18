@@ -1,9 +1,10 @@
 import { IsArray, IsDateString, IsOptional, IsString, MinLength } from 'class-validator';
 
-export class CreateCardDto {
+export class UpdateCardDto {
+  @IsOptional()
   @IsString()
   @MinLength(1)
-  title!: string;
+  title?: string;
 
   @IsOptional()
   @IsString()
@@ -24,9 +25,13 @@ export class CreateCardDto {
 
   @IsOptional()
   @IsString()
-  assigneeId?: string;
+  assigneeId?: string | null;
 
   @IsOptional()
   @IsDateString()
-  dueDate?: string;
+  dueDate?: string | null;
+
+  @IsOptional()
+  @IsDateString()
+  startDate?: string | null;
 }

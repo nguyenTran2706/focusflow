@@ -21,10 +21,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships   Membership[]
-  invitesSent   Invite[]       @relation("InviteSender")
-  cardsAuthored Card[]         @relation("CardAuthor")
-  comments      Comment[]
+  memberships    Membership[]
+  invitesSent    Invite[]       @relation("InviteSender")
+  cardsAuthored  Card[]         @relation("CardAuthor")
+  cardsAssigned  Card[]         @relation("CardAssignee")
+  comments       Comment[]
 }
 
 // ─── Tenancy ────────────────────────────────────────────────────────────────
@@ -119,20 +120,28 @@ model BoardColumn {
 }
 
 model Card {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  columnId  String   @db.ObjectId
-  authorId  String   @db.ObjectId
-  title     String
-  body      String?
-  rank      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  columnId   String    @db.ObjectId
+  authorId   String    @db.ObjectId
+  assigneeId String?   @db.ObjectId
+  title      String
+  body       String?
+  type       String    @default("task")
+  priority   String?
+  labels     String[]
+  dueDate    DateTime?
+  startDate  DateTime?
+  rank       String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   column   BoardColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
   author   User        @relation("CardAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  assignee User?       @relation("CardAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   comments Comment[]
 
   @@index([columnId, rank])
+  @@index([assigneeId])
 }
 
 model Comment {
