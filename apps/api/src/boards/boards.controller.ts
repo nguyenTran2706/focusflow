@@ -8,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { BoardsService } from './boards.service.js';
 import {
@@ -20,7 +20,7 @@ import {
   CreateCommentDto,
 } from './dto/index.js';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @Controller()
 export class BoardsController {
   constructor(private readonly boards: BoardsService) {}

@@ -1,8 +1,3 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuthStore } from '../lib/auth-store';
-
-export function ProtectedRoute() {
-  const token = useAuthStore((s) => s.token);
-  if (!token) return <Navigate to="/login" replace />;
-  return <Outlet />;
-}
+// Clerk handles route protection via SignedIn/SignedOut in App.tsx
+// This file is kept for backwards compatibility but is no longer used
+export {};

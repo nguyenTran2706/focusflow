@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { ClerkAuthGuard } from '../auth/clerk-auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { WorkspacesService } from './workspaces.service.js';
 import { CreateWorkspaceDto, InviteToWorkspaceDto } from './dto/index.js';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(ClerkAuthGuard)
 @Controller('workspaces')
 export class WorkspacesController {
   constructor(private readonly workspaces: WorkspacesService) {}

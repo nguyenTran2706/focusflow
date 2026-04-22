@@ -1,34 +1,32 @@
 import { create } from 'zustand';
 
-interface User {
+interface UserProfile {
   id: string;
+  clerkId: string;
   email: string;
-  name?: string;
+  name: string;
+  imageUrl?: string;
+  phone?: string;
+  addressStreet?: string;
+  addressCity?: string;
+  addressState?: string;
+  addressPostal?: string;
+  addressCountry?: string;
+  role: string;
+  subscription: string;
+  createdAt: string;
 }
 
 interface AuthState {
-  token: string | null;
-  user: User | null;
-  setAuth: (token: string, user: User) => void;
-  logout: () => void;
-  isAuthenticated: () => boolean;
+  dbUser: UserProfile | null;
+  setDbUser: (user: UserProfile) => void;
+  clearDbUser: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  token: localStorage.getItem('ff_token'),
-  user: JSON.parse(localStorage.getItem('ff_user') ?? 'null'),
-
-  setAuth: (token, user) => {
-    localStorage.setItem('ff_token', token);
-    localStorage.setItem('ff_user', JSON.stringify(user));
-    set({ token, user });
-  },
-
-  logout: () => {
-    localStorage.removeItem('ff_token');
-    localStorage.removeItem('ff_user');
-    set({ token: null, user: null });
-  },
-
-  isAuthenticated: () => !!get().token,
+export const useAuthStore = create<AuthState>((set) => ({
+  dbUser: null,
+  setDbUser: (user) => set({ dbUser: user }),
+  clearDbUser: () => set({ dbUser: null }),
 }));
+
+export type { UserProfile };

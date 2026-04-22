@@ -1,5 +1,11 @@
 const BASE = '/api';
 
+let getTokenFn: (() => Promise<string | null>) | null = null;
+
+export function setTokenGetter(fn: () => Promise<string | null>) {
+  getTokenFn = fn;
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -9,7 +15,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('ff_token');
+  const token = getTokenFn ? await getTokenFn() : null;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(opts.headers as Record<string, string> ?? {}),
