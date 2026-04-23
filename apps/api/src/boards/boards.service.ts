@@ -6,16 +6,31 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   CreateBoardDto,
+  UpdateBoardDto,
   CreateColumnDto,
+  UpdateColumnDto,
+  MoveColumnDto,
   CreateCardDto,
   UpdateCardDto,
   MoveCardDto,
   CreateCommentDto,
+  UpdateCommentDto,
 } from './dto/index.js';
+
+import { PusherService } from '../pusher/pusher.service.js';
+
+const TIER_LIMITS = {
+  FREE: { boardsPerWorkspace: 3, scrum: false },
+  PRO: { boardsPerWorkspace: 999, scrum: true },
+  PRO_MAX: { boardsPerWorkspace: 999, scrum: true },
+} as const;
 
 @Injectable()
 export class BoardsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pusher: PusherService,
+  ) {}
 
   // ── Membership guard ──────────────────────────────────────────────────────
 
@@ -29,8 +44,22 @@ export class BoardsService {
 
   // ── Boards ────────────────────────────────────────────────────────────────
 
+  private async getUserTier(userId: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    return user.subscription as keyof typeof TIER_LIMITS;
+  }
+
   async createBoard(workspaceId: string, dto: CreateBoardDto, userId: string) {
     await this.assertMember(workspaceId, userId);
+
+    const tier = await this.getUserTier(userId);
+    const limits = TIER_LIMITS[tier];
+    const boardCount = await this.prisma.board.count({ where: { workspaceId } });
+    if (boardCount >= limits.boardsPerWorkspace) {
+      throw new ForbiddenException(
+        `Your ${tier} plan allows up to ${limits.boardsPerWorkspace} boards per workspace. Upgrade to create more.`,
+      );
+    }
 
     // Create board with 3 default Jira-style columns
     return this.prisma.board.create({
@@ -84,9 +113,26 @@ export class BoardsService {
     return board;
   }
 
+  async updateBoard(boardId: string, dto: UpdateBoardDto, userId: string) {
+    const board = await this.prisma.board.findUniqueOrThrow({ where: { id: boardId } });
+    await this.assertMember(board.workspaceId, userId);
+
+    return this.prisma.board.update({
+      where: { id: boardId },
+      data: { ...(dto.name !== undefined && { name: dto.name }) },
+    });
+  }
+
+  async deleteBoard(boardId: string, userId: string) {
+    const board = await this.prisma.board.findUniqueOrThrow({ where: { id: boardId } });
+    await this.assertMember(board.workspaceId, userId);
+
+    return this.prisma.board.delete({ where: { id: boardId } });
+  }
+
   // ── Columns ───────────────────────────────────────────────────────────────
 
-  async createColumn(boardId: string, dto: CreateColumnDto, userId: string) {
+  async createColumn(boardId: string, dto: CreateColumnDto, userId: string, socketId?: string) {
     const board = await this.prisma.board.findUniqueOrThrow({
       where: { id: boardId },
     });
@@ -100,15 +146,65 @@ export class BoardsService {
     });
     const rank = lastColumn ? String(Number(lastColumn.rank) + 1) : '0';
 
-    return this.prisma.boardColumn.create({
+    const column = await this.prisma.boardColumn.create({
       data: { boardId, name: dto.name, rank },
       include: { cards: true },
     });
+
+    await this.pusher.trigger(`private-board-${boardId}`, 'board.updated', column, socketId);
+    return column;
+  }
+
+  async updateColumn(columnId: string, dto: UpdateColumnDto, userId: string, socketId?: string) {
+    const column = await this.prisma.boardColumn.findUniqueOrThrow({
+      where: { id: columnId },
+      include: { board: true },
+    });
+    await this.assertMember(column.board.workspaceId, userId);
+
+    const updated = await this.prisma.boardColumn.update({
+      where: { id: columnId },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+      },
+      include: { cards: true },
+    });
+
+    await this.pusher.trigger(`private-board-${column.boardId}`, 'board.updated', updated, socketId);
+    return updated;
+  }
+
+  async deleteColumn(columnId: string, userId: string, socketId?: string) {
+    const column = await this.prisma.boardColumn.findUniqueOrThrow({
+      where: { id: columnId },
+      include: { board: true },
+    });
+    await this.assertMember(column.board.workspaceId, userId);
+
+    const deleted = await this.prisma.boardColumn.delete({ where: { id: columnId } });
+    await this.pusher.trigger(`private-board-${column.boardId}`, 'board.updated', { deletedColumnId: columnId }, socketId);
+    return deleted;
+  }
+
+  async moveColumn(columnId: string, dto: MoveColumnDto, userId: string, socketId?: string) {
+    const column = await this.prisma.boardColumn.findUniqueOrThrow({
+      where: { id: columnId },
+      include: { board: true },
+    });
+    await this.assertMember(column.board.workspaceId, userId);
+
+    const updated = await this.prisma.boardColumn.update({
+      where: { id: columnId },
+      data: { rank: dto.rank },
+    });
+
+    await this.pusher.trigger(`private-board-${column.boardId}`, 'board.updated', updated, socketId);
+    return updated;
   }
 
   // ── Cards ─────────────────────────────────────────────────────────────────
 
-  async createCard(columnId: string, dto: CreateCardDto, userId: string) {
+  async createCard(columnId: string, dto: CreateCardDto, userId: string, socketId?: string) {
     const column = await this.prisma.boardColumn.findUniqueOrThrow({
       where: { id: columnId },
       include: { board: true },
@@ -123,7 +219,7 @@ export class BoardsService {
     });
     const rank = lastCard ? String(Number(lastCard.rank) + 1) : '0';
 
-    return this.prisma.card.create({
+    const card = await this.prisma.card.create({
       data: {
         columnId,
         authorId: userId,
@@ -141,6 +237,9 @@ export class BoardsService {
         assignee: { select: { id: true, name: true } },
       },
     });
+
+    await this.pusher.trigger(`private-board-${column.boardId}`, 'board.updated', card, socketId);
+    return card;
   }
 
   async getCard(cardId: string, userId: string) {
@@ -161,14 +260,14 @@ export class BoardsService {
     return card;
   }
 
-  async updateCard(cardId: string, dto: UpdateCardDto, userId: string) {
+  async updateCard(cardId: string, dto: UpdateCardDto, userId: string, socketId?: string) {
     const card = await this.prisma.card.findUniqueOrThrow({
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
     await this.assertMember(card.column.board.workspaceId, userId);
 
-    return this.prisma.card.update({
+    const updated = await this.prisma.card.update({
       where: { id: cardId },
       data: {
         ...(dto.title !== undefined && { title: dto.title }),
@@ -179,6 +278,8 @@ export class BoardsService {
         ...(dto.assigneeId !== undefined && { assigneeId: dto.assigneeId || null }),
         ...(dto.dueDate !== undefined && { dueDate: dto.dueDate ? new Date(dto.dueDate) : null }),
         ...(dto.startDate !== undefined && { startDate: dto.startDate ? new Date(dto.startDate) : null }),
+        ...(dto.sprintId !== undefined && { sprintId: dto.sprintId || null }),
+        ...(dto.storyPoints !== undefined && { storyPoints: dto.storyPoints }),
       },
       include: {
         author: { select: { id: true, name: true } },
@@ -186,32 +287,77 @@ export class BoardsService {
         _count: { select: { comments: true } },
       },
     });
+
+    await this.pusher.trigger(`private-board-${card.column.boardId}`, 'board.updated', updated, socketId);
+    return updated;
   }
 
-  async moveCard(cardId: string, dto: MoveCardDto, userId: string) {
+  async moveCard(cardId: string, dto: MoveCardDto, userId: string, socketId?: string) {
     const card = await this.prisma.card.findUniqueOrThrow({
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
     await this.assertMember(card.column.board.workspaceId, userId);
 
-    return this.prisma.card.update({
+    const updated = await this.prisma.card.update({
       where: { id: cardId },
       data: {
         columnId: dto.targetColumnId,
         rank: dto.rank,
       },
     });
+
+    await this.pusher.trigger(`private-board-${card.column.boardId}`, 'board.updated', updated, socketId);
+    return updated;
   }
 
-  async deleteCard(cardId: string, userId: string) {
+  async deleteCard(cardId: string, userId: string, socketId?: string) {
     const card = await this.prisma.card.findUniqueOrThrow({
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
     await this.assertMember(card.column.board.workspaceId, userId);
 
-    return this.prisma.card.delete({ where: { id: cardId } });
+    const deleted = await this.prisma.card.delete({ where: { id: cardId } });
+    await this.pusher.trigger(`private-board-${card.column.boardId}`, 'board.updated', { deletedCardId: cardId }, socketId);
+    return deleted;
+  }
+
+  async duplicateCard(cardId: string, userId: string, socketId?: string) {
+    const card = await this.prisma.card.findUniqueOrThrow({
+      where: { id: cardId },
+      include: {
+        column: { include: { board: true } },
+      },
+    });
+    await this.assertMember(card.column.board.workspaceId, userId);
+
+    // Provide a slightly higher rank
+    const newRank = String(Number(card.rank) + 1);
+
+    const newCard = await this.prisma.card.create({
+      data: {
+        columnId: card.columnId,
+        authorId: userId,
+        title: `${card.title} (Copy)`,
+        body: card.body,
+        type: card.type,
+        priority: card.priority,
+        labels: card.labels,
+        assigneeId: card.assigneeId,
+        dueDate: card.dueDate,
+        startDate: card.startDate,
+        storyPoints: card.storyPoints,
+        rank: newRank,
+      },
+      include: {
+        author: { select: { id: true, name: true } },
+        assignee: { select: { id: true, name: true } },
+      },
+    });
+
+    await this.pusher.trigger(`private-board-${card.column.boardId}`, 'board.updated', newCard, socketId);
+    return newCard;
   }
 
   // ── Comments ──────────────────────────────────────────────────────────────
@@ -245,5 +391,39 @@ export class BoardsService {
       },
       include: { author: { select: { id: true, name: true } } },
     });
+  }
+
+  async updateComment(commentId: string, dto: UpdateCommentDto, userId: string) {
+    const comment = await this.prisma.comment.findUniqueOrThrow({
+      where: { id: commentId },
+      include: { card: { include: { column: { include: { board: true } } } } },
+    });
+    await this.assertMember(comment.card.column.board.workspaceId, userId);
+
+    // Only the author can edit their own comment
+    if (comment.authorId !== userId) {
+      throw new ForbiddenException('You can only edit your own comments');
+    }
+
+    return this.prisma.comment.update({
+      where: { id: commentId },
+      data: { body: dto.body },
+      include: { author: { select: { id: true, name: true } } },
+    });
+  }
+
+  async deleteComment(commentId: string, userId: string) {
+    const comment = await this.prisma.comment.findUniqueOrThrow({
+      where: { id: commentId },
+      include: { card: { include: { column: { include: { board: true } } } } },
+    });
+    await this.assertMember(comment.card.column.board.workspaceId, userId);
+
+    // Only the author can delete their own comment
+    if (comment.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own comments');
+    }
+
+    return this.prisma.comment.delete({ where: { id: commentId } });
   }
 }

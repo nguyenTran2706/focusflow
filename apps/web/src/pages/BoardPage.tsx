@@ -14,14 +14,18 @@ import {
 import {
   SortableContext,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
   useSortable,
+  arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Sidebar } from '../components/Sidebar';
 import { TopNav } from '../components/TopNav';
 import { Modal } from '../components/Modal';
+import { BoardTabs } from '../components/BoardTabs';
 import { CardDetailPanel, PRIORITIES, LABEL_OPTIONS, TypeIcon } from '../components/CardDetailPanel';
 import { WorkspaceSummaryPage } from './WorkspaceSummaryPage';
+import { useAuthStore } from '../lib/auth-store';
 import { api } from '../lib/api';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -221,6 +225,15 @@ function DroppableColumn({
   setAddingCardCol,
   newCardTitle,
   setNewCardTitle,
+  menuOpen,
+  onToggleMenu,
+  renamingId,
+  renamingName,
+  onStartRename,
+  onRenamingNameChange,
+  onRenameSubmit,
+  onCancelRename,
+  onDeleteColumn,
 }: {
   column: Column;
   onCardClick: (card: Card) => void;
@@ -229,33 +242,87 @@ function DroppableColumn({
   setAddingCardCol: (id: string | null) => void;
   newCardTitle: string;
   setNewCardTitle: (v: string) => void;
+  menuOpen: boolean;
+  onToggleMenu: () => void;
+  renamingId: string | null;
+  renamingName: string;
+  onStartRename: () => void;
+  onRenamingNameChange: (v: string) => void;
+  onRenameSubmit: () => void;
+  onCancelRename: () => void;
+  onDeleteColumn: () => void;
 }) {
   const status = getColumnStatus(column.name);
   const colors = STATUS_COLORS[status];
   const cardIds = column.cards.map((c) => c.id);
+  const isRenaming = renamingId === column.id;
 
-  const { setNodeRef } = useSortable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: `column-${column.id}`,
     data: { type: 'column', column },
-    disabled: true,
   });
 
+  const colStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
   return (
-    <div className="w-[290px] shrink-0 flex flex-col max-h-[calc(100vh-var(--spacing-topnav)-7rem)] animate-fade-in">
-      {/* Column header */}
-      <div className={`flex items-center gap-2 mb-3 px-1 border-t-[3px] pt-3 ${colors.border}`}>
+    <div ref={setNodeRef} style={colStyle} className="w-[290px] shrink-0 flex flex-col max-h-[calc(100vh-var(--spacing-topnav)-7rem)] animate-fade-in">
+      {/* Column header — drag handle via spread listeners */}
+      <div className={`flex items-center gap-2 mb-3 px-1 border-t-[3px] pt-3 ${colors.border} group/colhdr cursor-grab active:cursor-grabbing`} {...attributes} {...listeners}>
         <span className={`w-2 h-2 rounded-full ${colors.dot}`} />
-        <h4 className="font-semibold text-[0.825rem] text-text-secondary uppercase tracking-[0.04em] flex-1">{column.name}</h4>
+        {isRenaming ? (
+          <input
+            className="flex-1 font-semibold text-[0.825rem] text-text-primary bg-bg-input border border-border-focus rounded px-2 py-0.5 outline-none uppercase tracking-[0.04em]"
+            value={renamingName}
+            onChange={(e) => onRenamingNameChange(e.target.value)}
+            onBlur={onRenameSubmit}
+            onKeyDown={(e) => { if (e.key === 'Enter') onRenameSubmit(); if (e.key === 'Escape') onCancelRename(); }}
+            autoFocus
+          />
+        ) : (
+          <h4 className="font-semibold text-[0.825rem] text-text-secondary uppercase tracking-[0.04em] flex-1">{column.name}</h4>
+        )}
         <span className={`text-[0.7rem] font-semibold px-[7px] py-[2px] rounded-full text-text-muted ${colors.bg}`}>
           {column.cards.length}
         </span>
+        {/* Context menu trigger */}
+        <div className="relative">
+          <button
+            className="p-1 rounded text-text-muted opacity-0 group-hover/colhdr:opacity-100 hover:bg-white/10 hover:text-text-primary transition-all"
+            onClick={onToggleMenu}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg>
+          </button>
+          {menuOpen && (
+            <div className="absolute top-full right-0 mt-1 w-[140px] bg-bg-card border border-border-subtle rounded-lg shadow-xl z-20 py-1">
+              <button className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/10 transition-colors text-left" onClick={() => { onToggleMenu(); onStartRename(); }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                Rename
+              </button>
+              <button className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-danger hover:bg-danger/10 transition-colors text-left" onClick={() => { onToggleMenu(); onDeleteColumn(); }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Card list */}
-      <div ref={setNodeRef} className="flex-1 flex flex-col gap-2 overflow-y-auto pb-2 pr-1 min-h-[60px]">
+      <div className="flex-1 flex flex-col gap-2 overflow-y-auto pb-2 pr-1 min-h-[60px]">
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           {column.cards.length === 0 && (
-            <div className="text-center py-8 text-text-muted text-[0.8rem] bg-white/[0.015] rounded-lg border border-dashed border-border-subtle">
+            <div className="text-center py-8 text-text-muted text-[0.8rem] bg-white/[0.05] rounded-lg border border-dashed border-border-subtle">
               <svg className="mx-auto mb-2 opacity-40" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
               </svg>
@@ -280,12 +347,12 @@ function DroppableColumn({
             />
             <div className="flex items-center gap-2">
               <button type="submit" className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors">Add card</button>
-              <button type="button" className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/5 transition-colors" onClick={() => setAddingCardCol(null)}>Cancel</button>
+              <button type="button" className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={() => setAddingCardCol(null)}>Cancel</button>
             </div>
           </form>
         ) : (
           <button
-            className="mt-1 flex items-center gap-2 w-full py-2 px-2 rounded-lg text-text-muted text-[0.8rem] font-medium transition-colors hover:bg-white/[0.03] hover:text-text-secondary"
+            className="mt-1 flex items-center gap-2 w-full py-2 px-2 rounded-lg text-text-muted text-[0.8rem] font-medium transition-colors hover:bg-white/[0.12] hover:text-text-secondary"
             onClick={() => { setAddingCardCol(column.id); setNewCardTitle(''); }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
@@ -305,8 +372,21 @@ export function WorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [boardName, setBoardName] = useState('');
-  const [activeTab, setActiveTab] = useState<'summary' | 'board'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'board' | 'settings'>('summary');
+  const [wsName, setWsName] = useState('');
+  const [wsSlug, setWsSlug] = useState('');
+  const [wsPlan, setWsPlan] = useState('');
+  const [editingWsName, setEditingWsName] = useState(false);
+  const [wsNameDraft, setWsNameDraft] = useState('');
+  const [confirmDeleteWs, setConfirmDeleteWs] = useState(false);
   const navigate = useNavigate();
+
+  const fetchWorkspace = async () => {
+    try {
+      const data = await api.get<{ name: string; slug: string; plan: string }>(`/workspaces/${workspaceId}`);
+      setWsName(data.name); setWsSlug(data.slug); setWsPlan(data.plan);
+    } catch { /* */ }
+  };
 
   const fetchBoards = async () => {
     try {
@@ -316,7 +396,7 @@ export function WorkspacePage() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchBoards(); }, [workspaceId]);
+  useEffect(() => { fetchWorkspace(); fetchBoards(); }, [workspaceId]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -328,15 +408,32 @@ export function WorkspacePage() {
     } catch { /* */ }
   };
 
+  const renameWorkspace = async () => {
+    setEditingWsName(false);
+    if (!wsNameDraft.trim() || wsNameDraft === wsName) return;
+    try {
+      await api.patch(`/workspaces/${workspaceId}`, { name: wsNameDraft });
+      fetchWorkspace();
+    } catch { /* */ }
+  };
+
+  const deleteWorkspace = async () => {
+    try {
+      await api.delete(`/workspaces/${workspaceId}`);
+      navigate('/dashboard');
+    } catch { /* */ }
+  };
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
-          title="Workspace"
+          title={wsName || 'Workspace'}
+          subtitle={wsSlug ? `/${wsSlug} · ${wsPlan}` : ''}
           actions={
-            <>
-              <button className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-transparent text-text-secondary hover:bg-white/5 hover:text-text-primary" onClick={() => navigate('/dashboard')}>
+            <div className="flex items-center gap-2">
+              <button className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-transparent text-text-secondary hover:bg-white/10 hover:text-text-primary" onClick={() => navigate('/dashboard')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
                 Back
               </button>
@@ -346,13 +443,13 @@ export function WorkspacePage() {
                 </svg>
                 New Board
               </button>
-            </>
+            </div>
           }
         />
 
         {/* Tab Bar */}
         <div className="flex items-center gap-0 px-6 border-b border-border-subtle bg-bg-root">
-          {(['summary', 'board'] as const).map((tab) => (
+          {(['summary', 'board', 'settings'] as const).map((tab) => (
             <button
               key={tab}
               className={`px-4 py-2.5 text-[0.8rem] font-semibold transition-colors relative capitalize
@@ -363,7 +460,7 @@ export function WorkspacePage() {
               `}
               onClick={() => setActiveTab(tab)}
             >
-              {tab === 'summary' ? 'Summary' : 'Board'}
+              {tab === 'summary' ? 'Summary' : tab === 'board' ? 'Board' : 'Settings'}
               {activeTab === tab && (
                 <div className="absolute bottom-0 left-2 right-2 h-[2px] bg-accent rounded-full" />
               )}
@@ -374,6 +471,63 @@ export function WorkspacePage() {
         {/* Tab Content */}
         {activeTab === 'summary' ? (
           <WorkspaceSummaryPage workspaceId={workspaceId!} />
+        ) : activeTab === 'settings' ? (
+          /* ═══ Settings tab ═══ */
+          <div className="flex-1 p-6 max-w-[600px]">
+            <h3 className="text-[1rem] font-semibold text-text-primary mb-6">Workspace Settings</h3>
+
+            {/* Rename */}
+            <div className="bg-bg-card border border-border-subtle rounded-lg p-5 mb-4">
+              <h4 className="text-[0.85rem] font-semibold text-text-primary mb-3">Workspace Name</h4>
+              {editingWsName ? (
+                <div className="flex items-center gap-3">
+                  <input
+                    className="flex-1 px-3 py-2 rounded-md border border-border-focus bg-bg-input text-text-primary text-[0.85rem] outline-none"
+                    value={wsNameDraft}
+                    onChange={(e) => setWsNameDraft(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') renameWorkspace(); if (e.key === 'Escape') setEditingWsName(false); }}
+                    autoFocus
+                  />
+                  <button className="px-4 py-2 rounded-md text-[0.8rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors" onClick={renameWorkspace}>Save</button>
+                  <button className="px-4 py-2 rounded-md text-[0.8rem] font-medium text-text-muted hover:bg-white/10 transition-colors" onClick={() => setEditingWsName(false)}>Cancel</button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.85rem] text-text-secondary">{wsName}</span>
+                  <button className="px-4 py-2 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={() => { setWsNameDraft(wsName); setEditingWsName(true); }}>
+                    Rename
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="bg-bg-card border border-border-subtle rounded-lg p-5 mb-4">
+              <h4 className="text-[0.85rem] font-semibold text-text-primary mb-3">Details</h4>
+              <div className="flex flex-col gap-2 text-[0.825rem]">
+                <div className="flex justify-between"><span className="text-text-muted">Slug</span><span className="text-text-secondary">/{wsSlug}</span></div>
+                <div className="flex justify-between"><span className="text-text-muted">Plan</span><span className="text-text-secondary font-medium">{wsPlan}</span></div>
+                <div className="flex justify-between"><span className="text-text-muted">Boards</span><span className="text-text-secondary">{boards.length}</span></div>
+              </div>
+            </div>
+
+            {/* Danger zone */}
+            <div className="bg-bg-card border border-danger/30 rounded-lg p-5">
+              <h4 className="text-[0.85rem] font-semibold text-danger mb-2">Danger Zone</h4>
+              <p className="text-[0.8rem] text-text-muted mb-4">Deleting this workspace will permanently remove all boards, columns, and cards.</p>
+              {confirmDeleteWs ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-[0.8rem] text-danger font-medium">Are you sure?</span>
+                  <button className="px-4 py-2 rounded-md text-[0.8rem] font-medium bg-danger text-white hover:bg-red-600 transition-colors" onClick={deleteWorkspace}>Yes, delete</button>
+                  <button className="px-4 py-2 rounded-md text-[0.8rem] font-medium text-text-muted hover:bg-white/10 transition-colors" onClick={() => setConfirmDeleteWs(false)}>Cancel</button>
+                </div>
+              ) : (
+                <button className="px-4 py-2 rounded-md text-[0.8rem] font-medium text-danger border border-danger/30 hover:bg-danger/10 transition-colors" onClick={() => setConfirmDeleteWs(true)}>
+                  Delete Workspace
+                </button>
+              )}
+            </div>
+          </div>
         ) : (
           <div className="flex-1 p-6">
             {loading ? (
@@ -430,8 +584,13 @@ export function WorkspacePage() {
 
 // ── Board Page ──────────────────────────────────────────────────────────────
 
+import { useRealtime } from '../hooks/useRealtime';
+
 export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
+  useRealtime(boardId);
+  const dbUser = useAuthStore((s) => s.dbUser);
+  const isFree = dbUser?.subscription === 'FREE';
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
   const [addingCol, setAddingCol] = useState(false);
@@ -442,7 +601,15 @@ export function BoardPage() {
   const [selectedColumnName, setSelectedColumnName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPriority, setFilterPriority] = useState<string>('');
+  const [filterType, setFilterType] = useState<string>('');
+  const [filterLabel, setFilterLabel] = useState<string>('');
   const [activeCard, setActiveCard] = useState<Card | null>(null);
+  const [editingBoardName, setEditingBoardName] = useState(false);
+  const [boardNameDraft, setBoardNameDraft] = useState('');
+  const [confirmDeleteBoard, setConfirmDeleteBoard] = useState(false);
+  const [columnMenuId, setColumnMenuId] = useState<string | null>(null);
+  const [renamingColId, setRenamingColId] = useState<string | null>(null);
+  const [renamingColName, setRenamingColName] = useState('');
   const navigate = useNavigate();
 
   const sensors = useSensors(
@@ -462,7 +629,7 @@ export function BoardPage() {
   // Filter cards
   const filteredBoard = useMemo(() => {
     if (!board) return null;
-    if (!searchQuery && !filterPriority) return board;
+    if (!searchQuery && !filterPriority && !filterType && !filterLabel) return board;
     const q = searchQuery.toLowerCase();
     return {
       ...board,
@@ -471,11 +638,13 @@ export function BoardPage() {
         cards: col.cards.filter((card) => {
           if (q && !card.title.toLowerCase().includes(q) && !(card.body ?? '').toLowerCase().includes(q)) return false;
           if (filterPriority && card.priority !== filterPriority) return false;
+          if (filterType && (card.type ?? 'task') !== filterType) return false;
+          if (filterLabel && !card.labels.includes(filterLabel)) return false;
           return true;
         }),
       })),
     };
-  }, [board, searchQuery, filterPriority]);
+  }, [board, searchQuery, filterPriority, filterType, filterLabel]);
 
   const totalCards = board?.columns.reduce((sum, col) => sum + col.cards.length, 0) ?? 0;
 
@@ -514,6 +683,61 @@ export function BoardPage() {
     } catch { /* */ }
   };
 
+  const duplicateCard = async (cardId: string) => {
+    try {
+      await api.post(`/cards/${cardId}/duplicate`);
+      setSelectedCardId(null);
+      fetchBoard();
+    } catch { /* */ }
+  };
+
+  const renameBoardSave = async () => {
+    setEditingBoardName(false);
+    if (!boardNameDraft.trim() || boardNameDraft === board?.name) return;
+    try {
+      await api.patch(`/boards/${boardId}`, { name: boardNameDraft });
+      fetchBoard();
+    } catch { /* */ }
+  };
+
+  const deleteBoardConfirm = async () => {
+    try {
+      await api.delete(`/boards/${boardId}`);
+      navigate(board ? `/workspaces/${board.workspaceId}` : '/dashboard');
+    } catch { /* */ }
+  };
+
+  const renameColumn = async (colId: string) => {
+    if (!renamingColName.trim()) return;
+    try {
+      await api.patch(`/columns/${colId}`, { name: renamingColName });
+      setRenamingColId(null);
+      fetchBoard();
+    } catch { /* */ }
+  };
+
+  const deleteColumn = async (colId: string) => {
+    try {
+      await api.delete(`/columns/${colId}`);
+      setColumnMenuId(null);
+      fetchBoard();
+    } catch { /* */ }
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'n' && !e.metaKey && !e.ctrlKey && !selectedCardId) {
+        e.preventDefault();
+        const firstCol = board?.columns[0];
+        if (firstCol) { setAddingCardCol(firstCol.id); setNewCardTitle(''); }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [board, selectedCardId]);
+
   // ── Drag and Drop ───────────────────────────────────────────────────────
 
   const findColumnByCardId = (cardId: string): Column | undefined => {
@@ -522,9 +746,15 @@ export function BoardPage() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
+    // Check if dragging a column
+    const activeId = active.id as string;
+    if (activeId.startsWith('column-')) {
+      setActiveCard(null);
+      return;
+    }
     const card = board?.columns
       .flatMap((c) => c.cards)
-      .find((c) => c.id === active.id);
+      .find((c) => c.id === activeId);
     setActiveCard(card ?? null);
   };
 
@@ -532,7 +762,11 @@ export function BoardPage() {
     const { active, over } = event;
     if (!over || !board) return;
 
-    const activeCol = findColumnByCardId(active.id as string);
+    const activeId = active.id as string;
+    // Skip column-over-column (handled in dragEnd)
+    if (activeId.startsWith('column-')) return;
+
+    const activeCol = findColumnByCardId(activeId);
     let overCol: Column | undefined;
 
     const overId = over.id as string;
@@ -577,6 +811,31 @@ export function BoardPage() {
 
     if (!over || !board) return;
 
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    // ── Column reorder ──
+    if (activeId.startsWith('column-') && overId.startsWith('column-')) {
+      const oldIndex = board.columns.findIndex((c) => `column-${c.id}` === activeId);
+      const newIndex = board.columns.findIndex((c) => `column-${c.id}` === overId);
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+      const reordered = arrayMove(board.columns, oldIndex, newIndex);
+      setBoard({ ...board, columns: reordered });
+
+      // Persist new ranks
+      try {
+        await Promise.all(
+          reordered.map((col, i) =>
+            api.patch(`/columns/${col.id}/move`, { rank: String(i) })
+          )
+        );
+        fetchBoard();
+      } catch { fetchBoard(); }
+      return;
+    }
+
+    // ── Card reorder ──
     const overCol = board.columns.find((col) =>
       col.cards.some((c) => c.id === active.id)
     );
@@ -629,15 +888,72 @@ export function BoardPage() {
       <Sidebar />
       <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
-          title={board?.name ?? 'Board'}
-          subtitle={`${board?.columns.length ?? 0} columns · ${totalCards} cards`}
+          title={editingBoardName ? '' : (board?.name ?? 'Board')}
+          subtitle={editingBoardName ? '' : `${board?.columns.length ?? 0} columns · ${totalCards} cards`}
           actions={
-            <button className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-transparent text-text-secondary hover:bg-white/5 hover:text-text-primary" onClick={() => board && navigate(`/workspaces/${board.workspaceId}`)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
-              Boards
-            </button>
+            <div className="flex items-center gap-2">
+              {editingBoardName ? (
+                <input
+                  className="px-3 py-[6px] rounded-md border border-border-focus bg-bg-input text-text-primary text-[0.875rem] outline-none w-[200px]"
+                  value={boardNameDraft}
+                  onChange={(e) => setBoardNameDraft(e.target.value)}
+                  onBlur={renameBoardSave}
+                  onKeyDown={(e) => { if (e.key === 'Enter') renameBoardSave(); if (e.key === 'Escape') setEditingBoardName(false); }}
+                  autoFocus
+                />
+              ) : (
+                <button className="p-2 rounded-md text-text-muted hover:bg-white/10 hover:text-text-primary transition-colors" title="Rename board" onClick={() => { setBoardNameDraft(board?.name ?? ''); setEditingBoardName(true); }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                </button>
+              )}
+              {confirmDeleteBoard ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[0.8rem] text-danger">Delete board?</span>
+                  <button className="px-3 py-1 rounded-md text-[0.75rem] font-medium bg-danger text-white" onClick={deleteBoardConfirm}>Yes</button>
+                  <button className="px-3 py-1 rounded-md text-[0.75rem] font-medium text-text-muted" onClick={() => setConfirmDeleteBoard(false)}>No</button>
+                </div>
+              ) : (
+                <button className="p-2 rounded-md text-text-muted hover:bg-danger/10 hover:text-danger transition-colors" title="Delete board" onClick={() => setConfirmDeleteBoard(true)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                </button>
+              )}
+              <button
+                className="p-2 rounded-md text-text-muted hover:bg-white/10 hover:text-text-primary transition-colors"
+                title="Export board as JSON"
+                onClick={() => {
+                  if (!board) return;
+                  const data = JSON.stringify(board, null, 2);
+                  const blob = new Blob([data], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${board.name.replace(/\s+/g, '_')}_export.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </button>
+              <div className="w-px h-5 bg-border-subtle mx-1" />
+              <button
+                className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-transparent text-text-secondary hover:bg-white/10 hover:text-text-primary"
+                onClick={() => navigate(`/boards/${boardId}/scrum`)}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+                Scrum Board
+                {isFree && <span className="ml-1 px-[5px] py-[1px] rounded text-[0.6rem] font-bold uppercase tracking-wide bg-warning/15 text-warning">Pro</span>}
+              </button>
+              <div className="w-px h-5 bg-border-subtle mx-1" />
+              <button className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-transparent text-text-secondary hover:bg-white/10 hover:text-text-primary" onClick={() => board && navigate(`/workspaces/${board.workspaceId}`)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
+                Boards
+              </button>
+            </div>
           }
         />
+        <BoardTabs boardId={boardId!} />
 
         {/* Filter bar */}
         <div className="flex items-center gap-3 px-6 py-3 border-b border-border-subtle bg-bg-root/80 backdrop-blur-sm">
@@ -663,10 +979,35 @@ export function BoardPage() {
             ))}
           </select>
 
-          {(searchQuery || filterPriority) && (
+          <select
+            className="px-3 py-[7px] rounded-md border border-border-subtle bg-bg-input text-text-secondary text-[0.8rem] outline-none focus:border-border-focus cursor-pointer transition-colors appearance-none pr-8"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235c5d6a' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+          >
+            <option value="">All types</option>
+            <option value="task">Task</option>
+            <option value="story">Story</option>
+            <option value="bug">Bug</option>
+            <option value="subtask">Subtask</option>
+          </select>
+
+          <select
+            className="px-3 py-[7px] rounded-md border border-border-subtle bg-bg-input text-text-secondary text-[0.8rem] outline-none focus:border-border-focus cursor-pointer transition-colors appearance-none pr-8"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235c5d6a' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+            value={filterLabel}
+            onChange={(e) => setFilterLabel(e.target.value)}
+          >
+            <option value="">All labels</option>
+            {LABEL_OPTIONS.map((l) => (
+              <option key={l.value} value={l.value}>{l.label}</option>
+            ))}
+          </select>
+
+          {(searchQuery || filterPriority || filterType || filterLabel) && (
             <button
               className="text-[0.75rem] text-text-muted hover:text-text-primary transition-colors flex items-center gap-1"
-              onClick={() => { setSearchQuery(''); setFilterPriority(''); }}
+              onClick={() => { setSearchQuery(''); setFilterPriority(''); setFilterType(''); setFilterLabel(''); }}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               Clear filters
@@ -683,6 +1024,7 @@ export function BoardPage() {
           onDragEnd={handleDragEnd}
         >
           <div className="flex-1 flex gap-4 p-6 overflow-x-auto overflow-y-hidden items-start">
+            <SortableContext items={filteredBoard?.columns.map(c => `column-${c.id}`) ?? []} strategy={horizontalListSortingStrategy}>
             {filteredBoard?.columns.map((col) => (
               <DroppableColumn
                 key={col.id}
@@ -696,8 +1038,18 @@ export function BoardPage() {
                 setAddingCardCol={setAddingCardCol}
                 newCardTitle={newCardTitle}
                 setNewCardTitle={setNewCardTitle}
+                menuOpen={columnMenuId === col.id}
+                onToggleMenu={() => setColumnMenuId(columnMenuId === col.id ? null : col.id)}
+                renamingId={renamingColId}
+                renamingName={renamingColName}
+                onStartRename={() => { setRenamingColId(col.id); setRenamingColName(col.name); }}
+                onRenamingNameChange={setRenamingColName}
+                onRenameSubmit={() => renameColumn(col.id)}
+                onCancelRename={() => setRenamingColId(null)}
+                onDeleteColumn={() => deleteColumn(col.id)}
               />
             ))}
+            </SortableContext>
 
             {/* Add Column */}
             <div className="w-[290px] shrink-0 pt-3">
@@ -713,7 +1065,7 @@ export function BoardPage() {
                   />
                   <div className="flex items-center gap-2">
                     <button type="submit" className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors">Add column</button>
-                    <button type="button" className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/5 transition-colors" onClick={() => setAddingCol(false)}>Cancel</button>
+                    <button type="button" className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={() => setAddingCol(false)}>Cancel</button>
                   </div>
                 </form>
               ) : (
@@ -745,6 +1097,7 @@ export function BoardPage() {
           onClose={() => setSelectedCardId(null)}
           onUpdate={fetchBoard}
           onDelete={deleteCard}
+          onDuplicate={duplicateCard}
         />
       )}
     </div>

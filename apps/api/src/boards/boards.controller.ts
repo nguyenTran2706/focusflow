@@ -7,17 +7,22 @@ import {
   Patch,
   Post,
   UseGuards,
+  Headers,
 } from '@nestjs/common';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { BoardsService } from './boards.service.js';
 import {
   CreateBoardDto,
+  UpdateBoardDto,
   CreateColumnDto,
+  UpdateColumnDto,
+  MoveColumnDto,
   CreateCardDto,
   UpdateCardDto,
   MoveCardDto,
   CreateCommentDto,
+  UpdateCommentDto,
 } from './dto/index.js';
 
 @UseGuards(ClerkAuthGuard)
@@ -52,6 +57,23 @@ export class BoardsController {
     return this.boards.getBoard(boardId, user.userId);
   }
 
+  @Patch('boards/:boardId')
+  updateBoard(
+    @Param('boardId') boardId: string,
+    @Body() dto: UpdateBoardDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.updateBoard(boardId, dto, user.userId);
+  }
+
+  @Delete('boards/:boardId')
+  deleteBoard(
+    @Param('boardId') boardId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.deleteBoard(boardId, user.userId);
+  }
+
   // ── Columns ───────────────────────────────────────────────────────────────
 
   @Post('boards/:boardId/columns')
@@ -59,8 +81,38 @@ export class BoardsController {
     @Param('boardId') boardId: string,
     @Body() dto: CreateColumnDto,
     @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
   ) {
-    return this.boards.createColumn(boardId, dto, user.userId);
+    return this.boards.createColumn(boardId, dto, user.userId, socketId);
+  }
+
+  @Patch('columns/:columnId')
+  updateColumn(
+    @Param('columnId') columnId: string,
+    @Body() dto: UpdateColumnDto,
+    @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
+  ) {
+    return this.boards.updateColumn(columnId, dto, user.userId, socketId);
+  }
+
+  @Delete('columns/:columnId')
+  deleteColumn(
+    @Param('columnId') columnId: string,
+    @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
+  ) {
+    return this.boards.deleteColumn(columnId, user.userId, socketId);
+  }
+
+  @Patch('columns/:columnId/move')
+  moveColumn(
+    @Param('columnId') columnId: string,
+    @Body() dto: MoveColumnDto,
+    @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
+  ) {
+    return this.boards.moveColumn(columnId, dto, user.userId, socketId);
   }
 
   // ── Cards ─────────────────────────────────────────────────────────────────
@@ -70,8 +122,9 @@ export class BoardsController {
     @Param('columnId') columnId: string,
     @Body() dto: CreateCardDto,
     @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
   ) {
-    return this.boards.createCard(columnId, dto, user.userId);
+    return this.boards.createCard(columnId, dto, user.userId, socketId);
   }
 
   @Get('cards/:cardId')
@@ -87,8 +140,9 @@ export class BoardsController {
     @Param('cardId') cardId: string,
     @Body() dto: UpdateCardDto,
     @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
   ) {
-    return this.boards.updateCard(cardId, dto, user.userId);
+    return this.boards.updateCard(cardId, dto, user.userId, socketId);
   }
 
   @Patch('cards/:cardId/move')
@@ -96,16 +150,27 @@ export class BoardsController {
     @Param('cardId') cardId: string,
     @Body() dto: MoveCardDto,
     @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
   ) {
-    return this.boards.moveCard(cardId, dto, user.userId);
+    return this.boards.moveCard(cardId, dto, user.userId, socketId);
   }
 
   @Delete('cards/:cardId')
   deleteCard(
     @Param('cardId') cardId: string,
     @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
   ) {
-    return this.boards.deleteCard(cardId, user.userId);
+    return this.boards.deleteCard(cardId, user.userId, socketId);
+  }
+
+  @Post('cards/:cardId/duplicate')
+  duplicateCard(
+    @Param('cardId') cardId: string,
+    @CurrentUser() user: { userId: string },
+    @Headers('x-socket-id') socketId?: string,
+  ) {
+    return this.boards.duplicateCard(cardId, user.userId, socketId);
   }
 
   // ── Comments ──────────────────────────────────────────────────────────────
@@ -125,5 +190,22 @@ export class BoardsController {
     @CurrentUser() user: { userId: string },
   ) {
     return this.boards.createComment(cardId, dto, user.userId);
+  }
+
+  @Patch('comments/:commentId')
+  updateComment(
+    @Param('commentId') commentId: string,
+    @Body() dto: UpdateCommentDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.updateComment(commentId, dto, user.userId);
+  }
+
+  @Delete('comments/:commentId')
+  deleteComment(
+    @Param('commentId') commentId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.deleteComment(commentId, user.userId);
   }
 }

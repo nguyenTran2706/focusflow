@@ -112,7 +112,7 @@ model Invite {
   @@index([email])
 }
 
-// ─── Kanban ─────────────────────────────────────────────────────────────────
+// ─── Kanban / Scrum ─────────────────────────────────────────────────────────
 
 model Board {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -121,10 +121,37 @@ model Board {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  columns   BoardColumn[]
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  columns     BoardColumn[]
+  sprints     Sprint[]
+  whiteboards Whiteboard[]
+  diagrams    Diagram[]
 
   @@index([workspaceId])
+}
+
+model Sprint {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  boardId   String       @db.ObjectId
+  name      String
+  goal      String?
+  startDate DateTime
+  endDate   DateTime
+  status    SprintStatus @default(PLANNING)
+  velocity  Int?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@index([boardId])
+}
+
+enum SprintStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
 }
 
 model BoardColumn {
@@ -143,28 +170,32 @@ model BoardColumn {
 }
 
 model Card {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  columnId   String    @db.ObjectId
-  authorId   String    @db.ObjectId
-  assigneeId String?   @db.ObjectId
-  title      String
-  body       String?
-  type       String    @default("task")
-  priority   String?
-  labels     String[]
-  dueDate    DateTime?
-  startDate  DateTime?
-  rank       String
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  columnId    String    @db.ObjectId
+  authorId    String    @db.ObjectId
+  assigneeId  String?   @db.ObjectId
+  sprintId    String?   @db.ObjectId
+  title       String
+  body        String?
+  type        String    @default("task")
+  priority    String?
+  labels      String[]
+  storyPoints Int?
+  dueDate     DateTime?
+  startDate   DateTime?
+  rank        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   column   BoardColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
   author   User        @relation("CardAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   assignee User?       @relation("CardAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  sprint   Sprint?     @relation(fields: [sprintId], references: [id], onDelete: SetNull)
   comments Comment[]
 
   @@index([columnId, rank])
   @@index([assigneeId])
+  @@index([sprintId])
 }
 
 model Comment {
@@ -179,6 +210,34 @@ model Comment {
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([cardId])
+}
+
+// ─── Whiteboard & Diagrams ──────────────────────────────────────────────────
+
+model Whiteboard {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  boardId     String   @db.ObjectId
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name        String   @default("Untitled Whiteboard")
+  scene       Json     @default("{}")
+  createdById String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([boardId])
+}
+
+model Diagram {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  boardId     String   @db.ObjectId
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name        String   @default("Untitled Diagram")
+  data        Json     @default("{}")
+  createdById String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([boardId])
 }
 
 // ─── FAQ (AI Chatbot knowledge base) ────────────────────────────────────────

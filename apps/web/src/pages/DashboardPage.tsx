@@ -4,6 +4,7 @@ import { Sidebar } from '../components/Sidebar';
 import { TopNav } from '../components/TopNav';
 import { Modal } from '../components/Modal';
 import { api, ApiError } from '../lib/api';
+import { useAuthStore } from '../lib/auth-store';
 
 interface Workspace {
   id: string;
@@ -14,6 +15,44 @@ interface Workspace {
   memberships?: { role: string; userId: string }[];
 }
 
+interface Limits {
+  tier: string;
+  limits: { workspaces: number; boardsPerWorkspace: number; scrum: boolean; aiChat: boolean };
+  usage: { workspaces: number };
+}
+
+interface DashboardStats {
+  totalBoards: number;
+  totalCards: number;
+  completedCards: number;
+  overdueCards: number;
+  recentBoards: { id: string; name: string; workspaceId: string; workspaceName: string; cardCount: number; updatedAt: string }[];
+}
+
+// ── Stat Card ─────────────────────────────────────────────────────────────────
+
+function StatCard({ icon, label, value, color, delay }: { icon: React.ReactNode; label: string; value: string | number; color: string; delay: number }) {
+  return (
+    <div
+      className="bg-bg-card border border-border-subtle rounded-xl p-5 flex items-center gap-4 animate-fade-in hover:bg-bg-card-hover transition-colors"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+        style={{ background: `${color}15`, color }}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-[1.4rem] font-bold text-text-primary leading-none mb-1">{value}</p>
+        <p className="text-[0.75rem] text-text-muted font-medium">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard Page ────────────────────────────────────────────────────────────
+
 export function DashboardPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,12 +61,40 @@ export function DashboardPage() {
   const [createSlug, setCreateSlug] = useState('');
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
+  const [limits, setLimits] = useState<Limits | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const dbUser = useAuthStore((s) => s.dbUser);
   const navigate = useNavigate();
 
-  const fetchWorkspaces = async () => {
+  const fetchData = async () => {
     try {
-      const data = await api.get<Workspace[]>('/workspaces');
+      const [data, lim] = await Promise.all([
+        api.get<Workspace[]>('/workspaces'),
+        api.get<Limits>('/workspaces/limits'),
+      ]);
       setWorkspaces(data);
+      setLimits(lim);
+
+      // Aggregate dashboard stats from workspace summaries
+      let totalBoards = 0;
+      let totalCards = 0;
+      let completedCards = 0;
+      let overdueCards = 0;
+      const recentBoards: DashboardStats['recentBoards'] = [];
+
+      for (const ws of data) {
+        totalBoards += ws._count?.boards ?? 0;
+        try {
+          const summary = await api.get<any>(`/workspaces/${ws.id}/summary`);
+          totalCards += summary.totalCards ?? 0;
+          completedCards += summary.completedRecently ?? 0;
+          overdueCards += summary.dueSoon ?? 0;
+        } catch {
+          // workspace might not have boards yet
+        }
+      }
+
+      setStats({ totalBoards, totalCards, completedCards, overdueCards, recentBoards });
     } catch {
       /* API not connected — show empty state */
     } finally {
@@ -35,7 +102,9 @@ export function DashboardPage() {
     }
   };
 
-  useEffect(() => { fetchWorkspaces(); }, []);
+  useEffect(() => { fetchData(); }, []);
+
+  const atWorkspaceLimit = limits ? workspaces.length >= limits.limits.workspaces : false;
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +115,7 @@ export function DashboardPage() {
       setShowCreate(false);
       setCreateName('');
       setCreateSlug('');
-      fetchWorkspaces();
+      fetchData();
     } catch (err) {
       setCreateError(err instanceof ApiError ? err.message : 'Failed to create workspace');
     } finally {
@@ -59,24 +128,89 @@ export function DashboardPage() {
     setCreateSlug(name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
   };
 
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
           title="Dashboard"
-          subtitle={`${workspaces.length} workspace${workspaces.length !== 1 ? 's' : ''}`}
+          subtitle={`${workspaces.length}${limits ? `/${limits.limits.workspaces}` : ''} workspace${workspaces.length !== 1 ? 's' : ''}${limits ? ` · ${limits.tier} plan` : ''}`}
           actions={
-            <button className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-accent text-white hover:bg-[#5558e6]" onClick={() => setShowCreate(true)}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              New Workspace
-            </button>
+            <div className="flex items-center gap-2">
+              {atWorkspaceLimit && (
+                <span className="text-[0.72rem] text-warning font-medium px-2 py-1 rounded bg-warning/10">
+                  Workspace limit reached
+                </span>
+              )}
+              <button
+                className={`inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap ${atWorkspaceLimit ? 'bg-warning text-black hover:bg-warning/90' : 'bg-accent text-white hover:bg-[#5558e6]'}`}
+                onClick={() => atWorkspaceLimit ? navigate('/pricing') : setShowCreate(true)}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  {atWorkspaceLimit ? <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /> : <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>}
+                </svg>
+                {atWorkspaceLimit ? 'Upgrade Plan' : 'New Workspace'}
+              </button>
+            </div>
           }
         />
 
         <div className="flex-1 p-6">
+          {/* Greeting */}
+          <div className="mb-6 animate-fade-in">
+            <h2 className="text-[1.4rem] font-bold text-text-primary">{greeting}, {dbUser?.name?.split(' ')[0] ?? 'there'} 👋</h2>
+            <p className="text-text-secondary text-[0.85rem] mt-1">Here's what's happening across your workspaces.</p>
+          </div>
+
+          {/* Stats Cards */}
+          {!loading && stats && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <StatCard
+                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>}
+                label="Total Boards"
+                value={stats.totalBoards}
+                color="#6366f1"
+                delay={0}
+              />
+              <StatCard
+                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>}
+                label="Total Cards"
+                value={stats.totalCards}
+                color="#8b5cf6"
+                delay={50}
+              />
+              <StatCard
+                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                label="Completed (7d)"
+                value={stats.completedCards}
+                color="#34d399"
+                delay={100}
+              />
+              <StatCard
+                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>}
+                label="Due Soon"
+                value={stats.overdueCards}
+                color="#f59e0b"
+                delay={150}
+              />
+            </div>
+          )}
+
+          {/* Workspaces grid */}
+          <div className="mb-4">
+            <h3 className="text-[0.95rem] font-semibold text-text-primary flex items-center gap-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+              Your Workspaces
+            </h3>
+          </div>
+
           {loading ? (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
               {[1,2,3].map(i => <div key={i} className="h-[150px] rounded-lg bg-bg-card border border-border-subtle animate-[pulse_1.5s_ease_infinite]" />)}
@@ -102,7 +236,7 @@ export function DashboardPage() {
               {workspaces.map((ws, i) => (
                 <div
                   key={ws.id}
-                  className="cursor-pointer animate-fade-in bg-bg-card border border-border-subtle rounded-lg p-5 transition-colors hover:bg-bg-card-hover"
+                  className="cursor-pointer animate-fade-in bg-bg-card border border-border-subtle rounded-lg p-5 transition-all hover:bg-bg-card-hover hover:-translate-y-[1px] hover:shadow-lg"
                   style={{ animationDelay: `${i * 60}ms` }}
                   onClick={() => navigate(`/workspaces/${ws.id}`)}
                 >

@@ -128,8 +128,35 @@ export class ChatService {
         ? textBlock.text
         : "Sorry, I couldn't generate a response. Please try again.";
     } catch {
-      return 'I\'m having trouble connecting right now. Please try again later or click "Talk to a human" for live support.';
+      return this.fallbackResponse(question);
     }
+  }
+
+  private fallbackResponse(question: string): string {
+    const q = question.toLowerCase();
+
+    if (q.includes('pricing') || q.includes('plan') || q.includes('cost') || q.includes('price') || q.includes('upgrade'))
+      return 'FocusFlow offers three plans: Free ($0), Pro ($12/mo) with unlimited boards and AI features, and Pro Max ($29/mo) with advanced analytics and dedicated support. Visit the Pricing page to upgrade!';
+
+    if (q.includes('board') || q.includes('kanban') || q.includes('column'))
+      return 'You can create boards inside any workspace. Each board comes with To Do, In Progress, and Done columns by default. Drag and drop cards between columns to track progress!';
+
+    if (q.includes('card') || q.includes('task') || q.includes('create'))
+      return 'To create a task, open a board and click the + button on any column. You can set priority, labels, assignee, due dates, and more from the card detail panel.';
+
+    if (q.includes('workspace') || q.includes('team'))
+      return 'Workspaces are where you organize your projects. Go to the Dashboard to create a new workspace, then add boards inside it.';
+
+    if (q.includes('password') || q.includes('account') || q.includes('login') || q.includes('sign'))
+      return 'FocusFlow uses Clerk for authentication. You can manage your account, change your password, or update your email through the profile icon in the sidebar.';
+
+    if (q.includes('help') || q.includes('support'))
+      return 'I\'m here to help! You can ask me about boards, cards, pricing, or workspaces. If you need human assistance, click the "Talk to human" button above.';
+
+    if (q.includes('hello') || q.includes('hi') || q.includes('hey'))
+      return 'Hey there! 👋 I\'m FocusFlow\'s assistant. I can help with questions about boards, tasks, pricing, and more. What would you like to know?';
+
+    return 'Thanks for your question! I can help with topics like boards, cards, workspaces, pricing, and account management. Could you tell me more about what you need help with? Or click "Talk to human" for live support.';
   }
 
   async escalateToHuman(chatId: string) {
@@ -150,5 +177,24 @@ export class ChatService {
     await this.pusher.trigger('admin-chats', 'chat-escalated', { chatId });
 
     return { status: 'waiting_human' };
+  }
+
+  async backToAI(chatId: string) {
+    await this.prisma.chat.update({
+      where: { id: chatId },
+      data: { status: 'BOT' },
+    });
+
+    const msg = await this.prisma.chatMessage.create({
+      data: {
+        chatId,
+        senderRole: 'BOT',
+        body: "You're now chatting with our AI assistant again. How can I help?",
+      },
+    });
+
+    await this.pusher.trigger(`chat-${chatId}`, 'new-message', msg);
+
+    return { status: 'bot' };
   }
 }

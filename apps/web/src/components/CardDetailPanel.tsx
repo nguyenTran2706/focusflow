@@ -21,6 +21,7 @@ interface CardDetail {
   columnId: string;
   assigneeId?: string;
   assignee?: { id: string; name: string } | null;
+  storyPoints?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
   createdAt: string;
@@ -50,6 +51,7 @@ interface CardDetailPanelProps {
   onClose: () => void;
   onUpdate: () => void;
   onDelete: (cardId: string) => void;
+  onDuplicate?: (cardId: string) => void;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -118,7 +120,7 @@ export function TypeIcon({ type, size = 16 }: { type?: string; size?: number }) 
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onClose, onUpdate, onDelete }: CardDetailPanelProps) {
+export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onClose, onUpdate, onDelete, onDuplicate }: CardDetailPanelProps) {
   const [card, setCard] = useState<CardDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -135,9 +137,11 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activityTab, setActivityTab] = useState<'all' | 'comments'>('all');
   const [members, setMembers] = useState<Member[]>([]);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentBody, setEditingCommentBody] = useState('');
 
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const currentUser = useAuthStore((s) => s.user);
+  const currentUser = useAuthStore((s) => s.dbUser);
 
   // Fetch card
   useEffect(() => {
@@ -150,7 +154,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
         setTitle(data.title);
         setBody(data.body ?? '');
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [cardId]);
 
@@ -159,7 +163,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
     if (!workspaceId) return;
     api.get<Member[]>(`/workspaces/${workspaceId}/members`)
       .then(setMembers)
-      .catch(() => {});
+      .catch(() => { });
   }, [workspaceId]);
 
   // Escape to close
@@ -191,7 +195,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
       const updated = await api.patch<CardDetail>(`/cards/${card.id}`, { [field]: value });
       setCard((prev) => prev ? { ...prev, ...updated } : prev);
       onUpdate();
-    } catch {}
+    } catch { }
   };
 
   const saveTitle = () => {
@@ -242,7 +246,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
       await api.patch(`/cards/${card.id}/move`, { targetColumnId, rank: '0' });
       setCard({ ...card, columnId: targetColumnId });
       onUpdate();
-    } catch {}
+    } catch { }
     setShowStatusMenu(false);
   };
 
@@ -255,8 +259,32 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
       setCard({ ...card, comments: [...card.comments, comment] });
       setCommentText('');
       onUpdate();
-    } catch {}
+    } catch { }
     finally { setSubmittingComment(false); }
+  };
+
+  const editComment = async (commentId: string) => {
+    if (!editingCommentBody.trim() || !card) return;
+    try {
+      const updated = await api.patch<Comment>(`/comments/${commentId}`, { body: editingCommentBody });
+      setCard({ ...card, comments: card.comments.map(c => c.id === commentId ? updated : c) });
+      setEditingCommentId(null);
+      setEditingCommentBody('');
+    } catch { }
+  };
+
+  const deleteComment = async (commentId: string) => {
+    if (!card) return;
+    try {
+      await api.delete(`/comments/${commentId}`);
+      setCard({ ...card, comments: card.comments.filter(c => c.id !== commentId) });
+      onUpdate();
+    } catch { }
+  };
+
+  const handleDuplicate = async () => {
+    if (!card || !onDuplicate) return;
+    onDuplicate(card.id);
   };
 
   const formatDate = (iso: string) => {
@@ -291,7 +319,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
         <div className="flex items-center justify-between px-6 py-3.5 border-b border-border-subtle shrink-0">
           <div className="flex items-center gap-3">
             <TypeIcon type={card?.type ?? 'task'} size={20} />
-            <span className="text-[0.75rem] font-medium px-2 py-0.5 rounded bg-white/5 text-text-secondary">
+            <span className="text-[0.75rem] font-medium px-2 py-0.5 rounded bg-white/10 text-text-secondary">
               {currentColumnName}
             </span>
             {priorityInfo && (
@@ -300,7 +328,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
               </span>
             )}
           </div>
-          <button className="w-8 h-8 rounded-md flex items-center justify-center text-text-muted hover:bg-white/5 hover:text-text-primary transition-colors" onClick={onClose}>
+          <button className="w-8 h-8 rounded-md flex items-center justify-center text-text-muted hover:bg-white/10 hover:text-text-primary transition-colors" onClick={onClose}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>
@@ -327,7 +355,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                     autoFocus
                   />
                 ) : (
-                  <h2 className="text-[1.25rem] font-semibold text-text-primary leading-tight cursor-pointer hover:text-accent transition-colors px-1 -mx-1 py-1 rounded hover:bg-white/[0.03]" onClick={() => setEditingTitle(true)}>
+                  <h2 className="text-[1.25rem] font-semibold text-text-primary leading-tight cursor-pointer hover:text-accent transition-colors px-1 -mx-1 py-1 rounded hover:bg-white/[0.12]" onClick={() => setEditingTitle(true)}>
                     {card.title}
                   </h2>
                 )}
@@ -354,11 +382,11 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                       />
                       <div className="flex gap-2">
                         <button className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors" onClick={saveBody}>Save</button>
-                        <button className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/5 transition-colors" onClick={() => { setBody(card.body ?? ''); setEditingBody(false); }}>Cancel</button>
+                        <button className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={() => { setBody(card.body ?? ''); setEditingBody(false); }}>Cancel</button>
                       </div>
                     </div>
                   ) : (
-                    <div className="cursor-pointer rounded-md px-3 py-2 min-h-[60px] bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-transparent hover:border-border-subtle" onClick={() => setEditingBody(true)}>
+                    <div className="cursor-pointer rounded-md px-3 py-2 min-h-[60px] bg-white/[0.06] hover:bg-white/[0.08] transition-colors border border-transparent hover:border-border-subtle" onClick={() => setEditingBody(true)}>
                       {card.body ? (
                         <p className="text-[0.85rem] text-text-secondary leading-relaxed whitespace-pre-wrap">{card.body}</p>
                       ) : (
@@ -378,7 +406,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                       Activity
                     </h4>
-                    <div className="flex bg-white/[0.04] rounded-md p-0.5">
+                    <div className="flex bg-white/[0.08] rounded-md p-0.5">
                       <button
                         className={`px-2.5 py-1 rounded text-[0.7rem] font-medium transition-colors ${activityTab === 'all' ? 'bg-white/10 text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
                         onClick={() => setActivityTab('all')}
@@ -393,7 +421,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                   {/* Comment list */}
                   <div className="flex flex-col gap-4 mb-4">
                     {card.comments.map((c) => (
-                      <div key={c.id} className="flex gap-3">
+                      <div key={c.id} className="flex gap-3 group/comment">
                         <div className="w-7 h-7 rounded-full bg-accent/30 flex items-center justify-center text-[0.6rem] font-bold text-accent-light shrink-0 mt-0.5">
                           {c.author.name.charAt(0).toUpperCase()}
                         </div>
@@ -401,8 +429,42 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-[0.8rem] font-semibold text-text-primary">{c.author.name}</span>
                             <span className="text-[0.7rem] text-text-muted">{formatTime(c.createdAt)}</span>
+                            {currentUser?.id === c.author.id && editingCommentId !== c.id && (
+                              <div className="ml-auto flex items-center gap-1 opacity-0 group-hover/comment:opacity-100 transition-opacity">
+                                <button
+                                  className="p-1 rounded hover:bg-white/10 text-text-muted hover:text-text-primary transition-colors"
+                                  title="Edit"
+                                  onClick={() => { setEditingCommentId(c.id); setEditingCommentBody(c.body); }}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                                </button>
+                                <button
+                                  className="p-1 rounded hover:bg-danger/10 text-text-muted hover:text-danger transition-colors"
+                                  title="Delete"
+                                  onClick={() => deleteComment(c.id)}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                                </button>
+                              </div>
+                            )}
                           </div>
-                          <p className="text-[0.825rem] text-text-secondary leading-relaxed">{c.body}</p>
+                          {editingCommentId === c.id ? (
+                            <div className="flex flex-col gap-2">
+                              <textarea
+                                className="w-full min-h-[48px] px-3 py-2 rounded-md border border-border-focus bg-bg-input text-text-primary text-[0.825rem] resize-none outline-none transition-colors leading-relaxed"
+                                value={editingCommentBody}
+                                onChange={(e) => setEditingCommentBody(e.target.value)}
+                                autoFocus
+                                onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) editComment(c.id); if (e.key === 'Escape') { setEditingCommentId(null); setEditingCommentBody(''); } }}
+                              />
+                              <div className="flex items-center gap-2">
+                                <button className="px-3 py-1 rounded-md text-[0.75rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors" onClick={() => editComment(c.id)}>Save</button>
+                                <button className="px-3 py-1 rounded-md text-[0.75rem] font-medium text-text-muted hover:bg-white/10 transition-colors" onClick={() => { setEditingCommentId(null); setEditingCommentBody(''); }}>Cancel</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-[0.825rem] text-text-secondary leading-relaxed">{c.body}</p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -445,14 +507,14 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                 <div className="flex flex-col gap-1.5" data-dropdown>
                   <span className="text-[0.7rem] font-semibold text-text-muted uppercase tracking-wide">Status</span>
                   <div className="relative">
-                    <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left text-[0.8rem]" onClick={() => setShowStatusMenu(!showStatusMenu)}>
+                    <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-white/[0.08] hover:bg-white/[0.12] transition-colors text-left text-[0.8rem]" onClick={() => setShowStatusMenu(!showStatusMenu)}>
                       <span className="text-text-primary font-medium">{currentColumnName}</span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
                     </button>
                     {showStatusMenu && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-bg-card border border-border-subtle rounded-lg shadow-xl z-10 py-1">
                         {columns.map((col) => (
-                          <button key={col.id} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/5 transition-colors text-left" onClick={() => moveToColumn(col.id)}>
+                          <button key={col.id} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/10 transition-colors text-left" onClick={() => moveToColumn(col.id)}>
                             {col.name}
                             {col.id === card.columnId && <svg className="ml-auto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>}
                           </button>
@@ -466,7 +528,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                 <div className="flex flex-col gap-1.5" data-dropdown>
                   <span className="text-[0.7rem] font-semibold text-text-muted uppercase tracking-wide">Assignee</span>
                   <div className="relative">
-                    <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left text-[0.8rem]" onClick={() => setShowAssigneeMenu(!showAssigneeMenu)}>
+                    <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-white/[0.08] hover:bg-white/[0.12] transition-colors text-left text-[0.8rem]" onClick={() => setShowAssigneeMenu(!showAssigneeMenu)}>
                       {card.assignee ? (
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 rounded-full bg-accent/60 flex items-center justify-center text-[0.55rem] font-bold text-white">
@@ -482,13 +544,13 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                     {showAssigneeMenu && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-bg-card border border-border-subtle rounded-lg shadow-xl z-10 py-1 max-h-[200px] overflow-y-auto">
                         {currentUser && (
-                          <button className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-accent hover:bg-white/5 transition-colors text-left border-b border-border-subtle" onClick={() => setAssignee(currentUser.id)}>
+                          <button className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-accent hover:bg-white/10 transition-colors text-left border-b border-border-subtle" onClick={() => setAssignee(currentUser.id)}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                             Assign to me
                           </button>
                         )}
                         {members.map((m) => (
-                          <button key={m.id} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/5 transition-colors text-left" onClick={() => setAssignee(m.id)}>
+                          <button key={m.id} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/10 transition-colors text-left" onClick={() => setAssignee(m.id)}>
                             <div className="w-5 h-5 rounded-full bg-accent/40 flex items-center justify-center text-[0.5rem] font-bold text-white">
                               {m.name.charAt(0).toUpperCase()}
                             </div>
@@ -497,7 +559,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                           </button>
                         ))}
                         {card.assigneeId && (
-                          <button className="w-full px-3 py-2 text-[0.8rem] text-text-muted hover:bg-white/5 transition-colors text-left border-t border-border-subtle" onClick={() => setAssignee(null)}>
+                          <button className="w-full px-3 py-2 text-[0.8rem] text-text-muted hover:bg-white/10 transition-colors text-left border-t border-border-subtle" onClick={() => setAssignee(null)}>
                             Remove assignee
                           </button>
                         )}
@@ -510,7 +572,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                 <div className="flex flex-col gap-1.5" data-dropdown>
                   <span className="text-[0.7rem] font-semibold text-text-muted uppercase tracking-wide">Priority</span>
                   <div className="relative">
-                    <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left text-[0.8rem]" onClick={() => setShowPriorityMenu(!showPriorityMenu)}>
+                    <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-white/[0.08] hover:bg-white/[0.12] transition-colors text-left text-[0.8rem]" onClick={() => setShowPriorityMenu(!showPriorityMenu)}>
                       {priorityInfo ? (
                         <span className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ background: priorityInfo.color }} />
@@ -524,14 +586,14 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                     {showPriorityMenu && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-bg-card border border-border-subtle rounded-lg shadow-xl z-10 py-1">
                         {PRIORITIES.map((p) => (
-                          <button key={p.value} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/5 transition-colors text-left" onClick={() => setPriority(p.value)}>
+                          <button key={p.value} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/10 transition-colors text-left" onClick={() => setPriority(p.value)}>
                             <span className="w-2.5 h-2.5 rounded-full" style={{ background: p.color }} />
                             {p.label}
                             {card.priority === p.value && <svg className="ml-auto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>}
                           </button>
                         ))}
                         {card.priority && (
-                          <button className="w-full px-3 py-2 text-[0.8rem] text-text-muted hover:bg-white/5 transition-colors text-left border-t border-border-subtle" onClick={() => setPriority(null)}>
+                          <button className="w-full px-3 py-2 text-[0.8rem] text-text-muted hover:bg-white/10 transition-colors text-left border-t border-border-subtle" onClick={() => setPriority(null)}>
                             Clear priority
                           </button>
                         )}
@@ -544,7 +606,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                 <div className="flex flex-col gap-1.5" data-dropdown>
                   <span className="text-[0.7rem] font-semibold text-text-muted uppercase tracking-wide">Type</span>
                   <div className="relative">
-                    <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-white/[0.04] hover:bg-white/[0.07] transition-colors text-left text-[0.8rem]" onClick={() => setShowTypeMenu(!showTypeMenu)}>
+                    <button className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md bg-white/[0.08] hover:bg-white/[0.12] transition-colors text-left text-[0.8rem]" onClick={() => setShowTypeMenu(!showTypeMenu)}>
                       <span className="flex items-center gap-2">
                         <TypeIcon type={card.type ?? 'task'} size={14} />
                         <span className="text-text-primary">{typeInfo.label}</span>
@@ -554,7 +616,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                     {showTypeMenu && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-bg-card border border-border-subtle rounded-lg shadow-xl z-10 py-1">
                         {CARD_TYPES.map((t) => (
-                          <button key={t.value} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/5 transition-colors text-left" onClick={() => setType(t.value)}>
+                          <button key={t.value} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/10 transition-colors text-left" onClick={() => setType(t.value)}>
                             <TypeIcon type={t.value} size={14} />
                             {t.label}
                             {(card.type ?? 'task') === t.value && <svg className="ml-auto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>}
@@ -565,12 +627,30 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                   </div>
                 </div>
 
+                {/* Story Points */}
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[0.7rem] font-semibold text-text-muted uppercase tracking-wide">Story Points</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    className="px-3 py-2 rounded-md bg-white/[0.08] border border-transparent focus:border-border-focus text-text-primary text-[0.8rem] outline-none transition-colors w-full"
+                    placeholder="–"
+                    value={card.storyPoints ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                      setCard({ ...card, storyPoints: val });
+                      saveField('storyPoints', val);
+                    }}
+                  />
+                </div>
+
                 {/* Due Date */}
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[0.7rem] font-semibold text-text-muted uppercase tracking-wide">Due date</span>
                   <input
                     type="date"
-                    className="w-full px-3 py-2 rounded-md bg-white/[0.04] border border-transparent hover:bg-white/[0.07] focus:border-border-focus text-text-primary text-[0.8rem] outline-none transition-colors [color-scheme:dark]"
+                    className="w-full px-3 py-2 rounded-md bg-white/[0.08] border border-transparent hover:bg-white/[0.12] focus:border-border-focus text-text-primary text-[0.8rem] outline-none transition-colors [color-scheme:dark]"
                     value={toInputDate(card.dueDate)}
                     onChange={(e) => {
                       const val = e.target.value || null;
@@ -585,7 +665,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                   <span className="text-[0.7rem] font-semibold text-text-muted uppercase tracking-wide">Start date</span>
                   <input
                     type="date"
-                    className="w-full px-3 py-2 rounded-md bg-white/[0.04] border border-transparent hover:bg-white/[0.07] focus:border-border-focus text-text-primary text-[0.8rem] outline-none transition-colors [color-scheme:dark]"
+                    className="w-full px-3 py-2 rounded-md bg-white/[0.08] border border-transparent hover:bg-white/[0.12] focus:border-border-focus text-text-primary text-[0.8rem] outline-none transition-colors [color-scheme:dark]"
                     value={toInputDate(card.startDate)}
                     onChange={(e) => {
                       const val = e.target.value || null;
@@ -608,14 +688,14 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                           </span>
                         ) : null;
                       })}
-                      <button className="w-6 h-6 rounded-full flex items-center justify-center text-text-muted hover:bg-white/5 hover:text-text-primary transition-colors border border-dashed border-border-subtle" onClick={() => setShowLabelMenu(!showLabelMenu)}>
+                      <button className="w-6 h-6 rounded-full flex items-center justify-center text-text-muted hover:bg-white/10 hover:text-text-primary transition-colors border border-dashed border-border-subtle" onClick={() => setShowLabelMenu(!showLabelMenu)}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                       </button>
                     </div>
                     {showLabelMenu && (
                       <div className="absolute top-full left-0 mt-2 w-[180px] bg-bg-card border border-border-subtle rounded-lg shadow-xl z-10 py-1">
                         {LABEL_OPTIONS.map((l) => (
-                          <button key={l.value} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/5 transition-colors text-left" onClick={() => toggleLabel(l.value)}>
+                          <button key={l.value} className="w-full flex items-center gap-2 px-3 py-2 text-[0.8rem] text-text-primary hover:bg-white/10 transition-colors text-left" onClick={() => toggleLabel(l.value)}>
                             <span className="w-2.5 h-2.5 rounded-full" style={{ background: l.color }} />
                             {l.label}
                             {card.labels.includes(l.value) && <svg className="ml-auto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 6L9 17l-5-5" /></svg>}
@@ -654,13 +734,19 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                   </div>
                 </div>
 
-                {/* Delete */}
-                <div className="mt-auto pt-4 border-t border-border-subtle">
+                {/* Actions */}
+                <div className="mt-auto pt-4 border-t border-border-subtle flex flex-col gap-2">
+                  {onDuplicate && (
+                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={handleDuplicate}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                      Duplicate card
+                    </button>
+                  )}
                   {confirmDelete ? (
                     <div className="flex items-center gap-3">
                       <span className="text-[0.8rem] text-danger">Delete?</span>
                       <button className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium bg-danger text-white hover:bg-red-600 transition-colors" onClick={() => onDelete(card.id)}>Yes</button>
-                      <button className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/5 transition-colors" onClick={() => setConfirmDelete(false)}>Cancel</button>
+                      <button className="px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={() => setConfirmDelete(false)}>Cancel</button>
                     </div>
                   ) : (
                     <button className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[0.8rem] font-medium text-danger hover:bg-danger/10 transition-colors" onClick={() => setConfirmDelete(true)}>

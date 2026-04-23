@@ -85,7 +85,7 @@ export function AdminPage() {
               className={`flex items-center gap-2 px-4 py-2.5 text-[0.82rem] font-medium rounded-t-lg border-b-2 transition-colors ${
                 tab === t.key
                   ? 'border-accent text-accent-light bg-accent-subtle'
-                  : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.03]'
+                  : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.12]'
               }`}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -166,7 +166,7 @@ function OverviewTab() {
                   </span>
                   <span className="text-[0.8rem] font-bold text-text-primary">{count}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/[0.05] overflow-hidden">
+                <div className="h-2 rounded-full bg-black/[0.06] dark:bg-white/[0.05] overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: SUB_COLORS[tier] }} />
                 </div>
                 <span className="text-[0.7rem] text-text-muted mt-1 block">{pct}%</span>
@@ -238,7 +238,7 @@ function UsersTab() {
               <tr><td colSpan={5} className="px-4 py-8 text-center text-text-muted text-[0.85rem]">No users found</td></tr>
             ) : (
               users.map((u) => (
-                <tr key={u.id} className="border-t border-border-subtle hover:bg-white/[0.02] transition-colors">
+                <tr key={u.id} className="border-t border-border-subtle hover:bg-white/[0.06] transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-[0.7rem] font-bold text-accent-light">
@@ -507,7 +507,7 @@ function ChatsTab() {
                 key={chat.id}
                 onClick={() => openChat(chat.id)}
                 className={`px-4 py-3 border-b border-border-subtle cursor-pointer transition-colors ${
-                  selectedChat === chat.id ? 'bg-accent-subtle' : 'hover:bg-white/[0.03]'
+                  selectedChat === chat.id ? 'bg-accent-subtle' : 'hover:bg-white/[0.12]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -552,10 +552,14 @@ function ChatsTab() {
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.senderRole === 'USER' ? 'justify-start' : 'justify-end'}`}>
                   <div
-                    className="max-w-[70%] px-3.5 py-2.5 rounded-2xl text-[0.82rem] leading-relaxed"
+                    className={`max-w-[70%] px-3.5 py-2.5 rounded-2xl text-[0.82rem] leading-relaxed ${
+                      msg.senderRole === 'USER'
+                        ? 'bg-bg-surface text-text-primary border border-border-subtle'
+                        : msg.senderRole === 'ADMIN'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                    }`}
                     style={{
-                      background: msg.senderRole === 'USER' ? 'rgba(255,255,255,0.06)' : msg.senderRole === 'ADMIN' ? 'rgba(52,211,153,0.12)' : 'rgba(99,102,241,0.12)',
-                      color: msg.senderRole === 'USER' ? '#d4d4d8' : msg.senderRole === 'ADMIN' ? '#34d399' : '#818cf8',
                       borderBottomLeftRadius: msg.senderRole === 'USER' ? '6px' : undefined,
                       borderBottomRightRadius: msg.senderRole !== 'USER' ? '6px' : undefined,
                     }}

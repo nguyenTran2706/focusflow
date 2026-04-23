@@ -99,7 +99,7 @@ export function ProfilePage() {
           actions={
             editing ? (
               <div className="flex items-center gap-2">
-                <button className="px-4 py-[7px] rounded-md text-[0.85rem] font-medium text-text-secondary hover:bg-white/5 transition-colors" onClick={handleCancel}>Cancel</button>
+                <button className="px-4 py-[7px] rounded-md text-[0.85rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={handleCancel}>Cancel</button>
                 <button className="px-4 py-[7px] rounded-md text-[0.85rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors disabled:opacity-50" onClick={handleSave} disabled={saving}>
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>

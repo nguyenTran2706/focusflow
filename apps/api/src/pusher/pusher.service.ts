@@ -17,9 +17,9 @@ export class PusherService {
   }
 
   /** Trigger an event on a channel */
-  async trigger(channel: string, event: string, data: unknown) {
+  async trigger(channel: string, event: string, data: unknown, socketId?: string) {
     try {
-      await this.pusher.trigger(channel, event, data);
+      await this.pusher.trigger(channel, event, data, socketId ? { socket_id: socketId } : undefined);
     } catch {
       // Silently fail if Pusher is not configured
     }

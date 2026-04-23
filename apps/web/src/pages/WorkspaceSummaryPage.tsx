@@ -197,7 +197,7 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
               <p className="text-[0.8rem] text-text-muted italic py-4 text-center">No recent activity</p>
             ) : (
               data.recentActivity.map((item) => (
-                <div key={item.cardId} className="flex items-start gap-2.5 py-2 px-2 rounded-md hover:bg-white/[0.03] transition-colors">
+                <div key={item.cardId} className="flex items-start gap-2.5 py-2 px-2 rounded-md hover:bg-white/[0.12] transition-colors">
                   <div className="w-6 h-6 rounded-full bg-accent/30 flex items-center justify-center text-[0.55rem] font-bold text-accent-light shrink-0 mt-0.5">
                     {item.author.name.charAt(0).toUpperCase()}
                   </div>

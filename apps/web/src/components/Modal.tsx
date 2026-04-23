@@ -25,7 +25,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
         <div className="flex items-center justify-between px-5 pt-5">
           <h3 className="text-[1.05rem]">{title}</h3>
           <button 
-            className="w-[28px] h-[28px] rounded-sm bg-transparent text-text-muted text-[0.9rem] flex items-center justify-center transition-colors hover:bg-white/5 hover:text-text-primary" 
+            className="w-[28px] h-[28px] rounded-sm bg-transparent text-text-muted text-[0.9rem] flex items-center justify-center transition-colors hover:bg-white/10 hover:text-text-primary" 
             onClick={onClose} 
             aria-label="Close"
           >

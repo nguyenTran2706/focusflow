@@ -36,6 +36,11 @@ export class ChatController {
     return this.chat.escalateToHuman(body.chatId);
   }
 
+  @Post('back-to-ai')
+  backToAI(@Body() body: { chatId: string }) {
+    return this.chat.backToAI(body.chatId);
+  }
+
   @Post('pusher/auth')
   pusherAuth(
     @CurrentUser() user: { userId: string },

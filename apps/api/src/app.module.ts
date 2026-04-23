@@ -10,6 +10,9 @@ import { StripeModule } from './stripe/stripe.module.js';
 import { ChatModule } from './chat/chat.module.js';
 import { PusherModule } from './pusher/pusher.module.js';
 import { AdminModule } from './admin/admin.module.js';
+import { SprintsModule } from './sprints/sprints.module.js';
+import { WhiteboardsModule } from './whiteboards/whiteboards.module.js';
+import { DiagramsModule } from './diagrams/diagrams.module.js';
 
 @Module({
   imports: [
@@ -21,6 +24,9 @@ import { AdminModule } from './admin/admin.module.js';
     AuthModule,
     WorkspacesModule,
     BoardsModule,
+    SprintsModule,
+    WhiteboardsModule,
+    DiagramsModule,
     StripeModule,
     ChatModule,
     PusherModule,

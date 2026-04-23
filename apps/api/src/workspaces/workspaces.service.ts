@@ -6,15 +6,42 @@ import {
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { CreateWorkspaceDto, InviteToWorkspaceDto } from './dto/index.js';
+import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteToWorkspaceDto } from './dto/index.js';
+
+const TIER_LIMITS = {
+  FREE: { workspaces: 3, boardsPerWorkspace: 3, scrum: false, aiChat: false },
+  PRO: { workspaces: 10, boardsPerWorkspace: 999, scrum: true, aiChat: true },
+  PRO_MAX: { workspaces: 999, boardsPerWorkspace: 999, scrum: true, aiChat: true },
+} as const;
 
 @Injectable()
 export class WorkspacesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async getUserTier(userId: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    return user.subscription as keyof typeof TIER_LIMITS;
+  }
+
+  async getLimits(userId: string) {
+    const tier = await this.getUserTier(userId);
+    const limits = TIER_LIMITS[tier];
+    const workspaceCount = await this.prisma.membership.count({ where: { userId } });
+    return { tier, limits, usage: { workspaces: workspaceCount } };
+  }
+
   // ── Create ────────────────────────────────────────────────────────────────
 
   async create(dto: CreateWorkspaceDto, userId: string) {
+    const tier = await this.getUserTier(userId);
+    const limits = TIER_LIMITS[tier];
+    const workspaceCount = await this.prisma.membership.count({ where: { userId } });
+    if (workspaceCount >= limits.workspaces) {
+      throw new ForbiddenException(
+        `Your ${tier} plan allows up to ${limits.workspaces} workspaces. Upgrade to create more.`,
+      );
+    }
+
     const slugTaken = await this.prisma.workspace.findUnique({
       where: { slug: dto.slug },
     });
@@ -69,6 +96,37 @@ export class WorkspacesService {
       throw new ForbiddenException('Not a member of this workspace');
     }
     return workspace;
+  }
+
+  // ── Update ────────────────────────────────────────────────────────────────
+
+  async update(workspaceId: string, dto: UpdateWorkspaceDto, userId: string) {
+    const workspace = await this.findOneOrFail(workspaceId, userId);
+    // Only OWNER or ADMIN can update
+    const membership = workspace.memberships.find((m) => m.userId === userId);
+    if (!membership || membership.role === 'MEMBER') {
+      throw new ForbiddenException('Only admins or owners can update workspaces');
+    }
+
+    return this.prisma.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+      },
+    });
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+
+  async delete(workspaceId: string, userId: string) {
+    const workspace = await this.findOneOrFail(workspaceId, userId);
+    // Only OWNER can delete
+    const membership = workspace.memberships.find((m) => m.userId === userId);
+    if (!membership || membership.role !== 'OWNER') {
+      throw new ForbiddenException('Only the owner can delete a workspace');
+    }
+
+    return this.prisma.workspace.delete({ where: { id: workspaceId } });
   }
 
   // ── Members ───────────────────────────────────────────────────────────────
@@ -222,5 +280,45 @@ export class WorkspacesService {
         expiresAt,
       },
     });
+  }
+
+  // ── Accept invite ─────────────────────────────────────────────────────────
+
+  async acceptInvite(token: string, userId: string) {
+    const invite = await this.prisma.invite.findUnique({
+      where: { token },
+      include: { workspace: true },
+    });
+    if (!invite) throw new NotFoundException('Invite not found');
+    if (invite.acceptedAt) throw new ConflictException('Invite already accepted');
+    if (invite.expiresAt < new Date()) throw new ForbiddenException('Invite has expired');
+
+    // Verify the accepting user's email matches the invite
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (user.email !== invite.email) {
+      throw new ForbiddenException('This invite was sent to a different email address');
+    }
+
+    // Check if already a member
+    const existing = await this.prisma.membership.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId: invite.workspaceId } },
+    });
+    if (existing) throw new ConflictException('Already a member of this workspace');
+
+    // Create membership and mark invite as accepted
+    await this.prisma.membership.create({
+      data: {
+        userId,
+        workspaceId: invite.workspaceId,
+        role: invite.role,
+      },
+    });
+
+    await this.prisma.invite.update({
+      where: { id: invite.id },
+      data: { acceptedAt: new Date() },
+    });
+
+    return { workspaceId: invite.workspaceId, workspaceName: invite.workspace.name };
   }
 }

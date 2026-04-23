@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsArray, IsDateString, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
 
 export class UpdateCardDto {
   @IsOptional()
@@ -26,6 +26,15 @@ export class UpdateCardDto {
   @IsOptional()
   @IsString()
   assigneeId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  sprintId?: string | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  storyPoints?: number | null;
 
   @IsOptional()
   @IsDateString()

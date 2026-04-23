@@ -1,6 +1,6 @@
 const BASE = '/api';
 
-let getTokenFn: (() => Promise<string | null>) | null = null;
+export let getTokenFn: (() => Promise<string | null>) | null = null;
 
 export function setTokenGetter(fn: () => Promise<string | null>) {
   getTokenFn = fn;
@@ -14,6 +14,8 @@ export class ApiError extends Error {
   }
 }
 
+import { getSocketId } from './pusher';
+
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = getTokenFn ? await getTokenFn() : null;
   const headers: Record<string, string> = {
@@ -21,6 +23,9 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
     ...(opts.headers as Record<string, string> ?? {}),
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  
+  const socketId = getSocketId();
+  if (socketId) headers['x-socket-id'] = socketId;
 
   const res = await fetch(`${BASE}${path}`, { ...opts, headers });
 
