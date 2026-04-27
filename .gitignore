@@ -12,3 +12,5 @@ Thumbs.db
 .idea/
 *.tsbuildinfo
 .turbo/
+.vercel/
+.vercel

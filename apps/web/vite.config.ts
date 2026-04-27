@@ -7,6 +7,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   envDir: '../../',
   clearScreen: false,
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+  },
   test: {
     globals: true,
     environment: 'jsdom',
