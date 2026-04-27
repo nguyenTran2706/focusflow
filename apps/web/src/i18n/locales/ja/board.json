@@ -1,0 +1,51 @@
+{
+  "tabs": {
+    "summary": "概要",
+    "board": "ボード",
+    "scrum": "スクラム",
+    "diagrams": "ダイアグラム",
+    "whiteboards": "ホワイトボード"
+  },
+  "columns": {
+    "addColumn": "列を追加",
+    "newColumn": "新しい列",
+    "deleteColumn": "列を削除"
+  },
+  "cards": {
+    "addCard": "カードを追加",
+    "newCard": "新しいカード",
+    "deleteCard": "カードを削除",
+    "noDescription": "説明なし",
+    "assignee": "担当者",
+    "dueDate": "期限",
+    "type": "タイプ",
+    "description": "説明",
+    "comments": "コメント",
+    "attachments": "添付ファイル"
+  },
+  "workspace": {
+    "settings": "ワークスペース設定",
+    "members": "メンバー",
+    "invite": "招待",
+    "inviteMembers": "メンバーを招待",
+    "role": "役割",
+    "removeMember": "メンバーを削除",
+    "rename": "名前変更",
+    "delete": "ワークスペースを削除"
+  },
+  "summary": {
+    "completed7d": "完了（7日間）",
+    "updated7d": "更新（7日間）",
+    "created7d": "作成（7日間）",
+    "dueSoon": "期限間近",
+    "ofTotalCards": "全{{count}}枚のカード中",
+    "statusOverview": "ステータス概要",
+    "recentActivity": "最近のアクティビティ",
+    "noRecentActivity": "最近のアクティビティはありません",
+    "priorityBreakdown": "優先度の内訳",
+    "typesOfWork": "作業の種類",
+    "noCardsYet": "カードはまだありません",
+    "total": "合計",
+    "unableToLoad": "概要を読み込めません"
+  }
+}

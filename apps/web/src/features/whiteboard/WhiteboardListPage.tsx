@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Sidebar } from '../../components/Sidebar';
 import { TopNav } from '../../components/TopNav';
 import { BoardTabs } from '../../components/BoardTabs';
@@ -7,6 +8,8 @@ import { useAuthStore } from '../../lib/auth-store';
 import { useWhiteboards, useCreateWhiteboard, useDeleteWhiteboard } from './hooks/useWhiteboard';
 
 export function WhiteboardListPage() {
+  const { t } = useTranslation('whiteboard');
+  const { t: tc } = useTranslation('common');
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
   const dbUser = useAuthStore((s) => s.dbUser);
@@ -19,7 +22,7 @@ export function WhiteboardListPage() {
   const handleCreate = async () => {
     try {
       const wb = await createMut.mutateAsync(undefined);
-      navigate(`whiteboards/${wb.id}`);
+      navigate(`/boards/${boardId}/whiteboards/${wb.id}`);
     } catch {
       /* tier limit — handled by error boundary or toast */
     }
@@ -31,7 +34,7 @@ export function WhiteboardListPage() {
       <div className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-          <TopNav title="Whiteboards" />
+          <TopNav title={t('list.title')} />
           {boardId && <BoardTabs boardId={boardId} />}
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-[420px] px-8">
@@ -41,16 +44,14 @@ export function WhiteboardListPage() {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </div>
-              <h2 className="text-[1.2rem] font-bold text-text-primary mb-2">Whiteboards is a Pro Feature</h2>
-              <p className="text-text-secondary text-[0.85rem] mb-6">
-                Collaborative whiteboards powered by Excalidraw are available on the Pro and Pro Max plans.
-              </p>
+              <h2 className="text-[1.2rem] font-bold text-text-primary mb-2">{tc('upgrade.proFeature', { feature: t('title') })}</h2>
+              <p className="text-text-secondary text-[0.85rem] mb-6">{tc('upgrade.unlockMessage', { feature: t('title') })}</p>
               <div className="flex items-center justify-center gap-3">
                 <button className="px-5 py-2.5 rounded-md text-[0.85rem] font-medium bg-warning text-black hover:bg-warning/90 transition-colors" onClick={() => navigate('/pricing')}>
-                  View Plans
+                  {tc('actions.viewPlans')}
                 </button>
                 <button className="px-5 py-2.5 rounded-md text-[0.85rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={() => navigate(`/boards/${boardId}`)}>
-                  Back to Kanban
+                  {tc('actions.back')}
                 </button>
               </div>
             </div>
@@ -65,7 +66,7 @@ export function WhiteboardListPage() {
       <div className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-          <TopNav title="Whiteboards" />
+          <TopNav title={t('list.title')} />
           {boardId && <BoardTabs boardId={boardId} />}
           <div className="flex-1 p-6">
             <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
@@ -93,16 +94,14 @@ export function WhiteboardListPage() {
                 <path d="M7 7h3v3H7z" /><path d="M14 7h3v3h-3z" /><path d="M7 14h3v3H7z" />
               </svg>
             </div>
-            <h2 className="text-[1.15rem] text-text-primary font-semibold">No whiteboards yet</h2>
-            <p className="text-text-secondary max-w-[360px] text-[0.875rem]">
-              Create your first whiteboard to start sketching ideas, brainstorming, and collaborating with your team.
-            </p>
+            <h2 className="text-[1.15rem] text-text-primary font-semibold">{t('list.empty')}</h2>
+            <p className="text-text-secondary max-w-[360px] text-[0.875rem]">{t('list.emptyDescription')}</p>
             <button
               className="mt-3 inline-flex items-center justify-center gap-[6px] px-5 py-2.5 rounded-md text-[0.9rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
               onClick={handleCreate}
               disabled={createMut.isPending}
             >
-              {createMut.isPending ? 'Creating...' : 'Create Whiteboard'}
+              {createMut.isPending ? tc('actions.creating') : t('list.create')}
             </button>
           </div>
         </main>
@@ -119,7 +118,7 @@ export function WhiteboardListPage() {
         <div className="flex-1 p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-[1rem] font-semibold text-text-primary">
-              Whiteboards <span className="text-text-muted font-normal">({whiteboards.length})</span>
+              {t('list.title')} <span className="text-text-muted font-normal">({whiteboards.length})</span>
             </h3>
             <button
               className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
@@ -129,7 +128,7 @@ export function WhiteboardListPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              New Whiteboard
+              {t('list.create')}
             </button>
           </div>
 
@@ -161,7 +160,7 @@ export function WhiteboardListPage() {
                         className="px-2 py-1 rounded text-[0.7rem] font-medium text-text-muted"
                         onClick={() => setConfirmDeleteId(null)}
                       >
-                        Cancel
+                        {tc('actions.cancel')}
                       </button>
                     </div>
                   ) : (
@@ -178,7 +177,7 @@ export function WhiteboardListPage() {
                 </div>
                 <h3 className="text-[0.95rem] text-text-primary mb-[2px]">{wb.name}</h3>
                 <p className="text-text-muted text-[0.75rem]">
-                  Updated {new Date(wb.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  Updated {new Date(wb.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             ))}

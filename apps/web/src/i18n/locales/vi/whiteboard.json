@@ -1,0 +1,5 @@
+{
+  "title": "Bảng trắng", "loading": "Đang tải bảng trắng...",
+  "toolbar": { "backToWhiteboards": "Quay lại danh sách", "exportPng": "Xuất PNG", "save": "Lưu", "saveShortcut": "Lưu bảng trắng (Ctrl+S)" },
+  "list": { "title": "Bảng trắng", "empty": "Chưa có bảng trắng nào", "emptyDescription": "Tạo bảng trắng đầu tiên để bắt đầu phác thảo ý tưởng.", "create": "Bảng trắng mới", "search": "Tìm bảng trắng...", "lastEdited": "Chỉnh sửa lần cuối {{time}}", "confirmDelete": "Xóa bảng trắng này? Hành động không thể hoàn tác." }
+}

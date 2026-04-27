@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Sidebar } from '../components/Sidebar';
 import { TopNav } from '../components/TopNav';
 import { useAuthStore } from '../lib/auth-store';
@@ -8,67 +10,42 @@ import { api } from '../lib/api';
 const PLANS = [
   {
     key: 'FREE',
-    name: 'Free',
-    price: '$0',
-    period: 'forever',
-    description: 'Perfect for getting started',
-    features: [
-      '3 workspaces',
-      '5 boards per workspace',
-      'Basic Kanban board',
-      'Email support',
-    ],
-    missing: [
-      'AI task breakdown',
-      'Real-time collaboration',
-      'Priority support',
-      'Custom labels & fields',
-      'Advanced analytics',
-    ],
+    nameKey: 'plans.free.name',
+    priceKey: 'plans.free.price',
+    periodKey: 'plans.free.period',
+    descKey: 'plans.free.description',
+    featureKeys: ['features.workspaces3', 'features.boards5', 'features.basicKanban', 'features.emailSupport'],
+    missingKeys: ['features.aiTaskBreakdown', 'features.realtimeCollab', 'features.prioritySupport', 'features.customLabels', 'features.advancedAnalytics'],
     accent: '#6366f1',
     popular: false,
   },
   {
     key: 'PRO',
-    name: 'Pro',
-    price: '$12',
-    period: '/month',
-    description: 'For professionals who need more',
-    features: [
-      'Unlimited workspaces',
-      'Unlimited boards',
-      'AI task breakdown',
-      'Real-time collaboration',
-      'Priority support',
-      'Custom labels & fields',
-    ],
-    missing: [
-      'Advanced analytics',
-    ],
+    nameKey: 'plans.pro.name',
+    priceKey: 'plans.pro.price',
+    periodKey: 'plans.pro.period',
+    descKey: 'plans.pro.description',
+    featureKeys: ['features.unlimitedWorkspaces', 'features.unlimitedBoards', 'features.aiTaskBreakdown', 'features.realtimeCollab', 'features.prioritySupport', 'features.customLabels'],
+    missingKeys: ['features.advancedAnalytics'],
     accent: '#fbbf24',
     popular: true,
   },
   {
     key: 'PRO_MAX',
-    name: 'Pro Max',
-    price: '$29',
-    period: '/month',
-    description: 'Everything, unlimited',
-    features: [
-      'Everything in Pro',
-      'Advanced analytics dashboard',
-      'Dedicated support channel',
-      'Custom integrations',
-      'Team management tools',
-      'Audit logs',
-    ],
-    missing: [],
+    nameKey: 'plans.proMax.name',
+    priceKey: 'plans.proMax.price',
+    periodKey: 'plans.proMax.period',
+    descKey: 'plans.proMax.description',
+    featureKeys: ['features.everythingInPro', 'features.analyticsDashboard', 'features.dedicatedSupport', 'features.customIntegrations', 'features.teamManagement', 'features.auditLogs'],
+    missingKeys: [] as string[],
     accent: '#34d399',
     popular: false,
   },
 ];
 
 export function PricingPage() {
+  const { t } = useTranslation('pricing');
+  const { t: te } = useTranslation('errors');
   const { isSignedIn } = useAuth();
   const dbUser = useAuthStore((s) => s.dbUser);
   const currentPlan = dbUser?.subscription ?? 'FREE';
@@ -89,7 +66,7 @@ export function PricingPage() {
       const res = await api.post<{ url: string }>('/stripe/checkout', { priceId });
       if (res.url) window.location.href = res.url;
     } catch {
-      // silently fail
+      toast.error(te('generic'));
     } finally {
       setLoadingPlan(null);
     }
@@ -101,7 +78,7 @@ export function PricingPage() {
       const res = await api.post<{ url: string }>('/stripe/portal');
       if (res.url) window.location.href = res.url;
     } catch {
-      // silently fail
+      toast.error(te('generic'));
     } finally {
       setLoadingPlan(null);
     }
@@ -111,15 +88,15 @@ export function PricingPage() {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-        <TopNav title="Pricing" />
+        <TopNav title={t('title')} />
         <div className="flex-1 p-6 flex flex-col items-center">
           {/* Header */}
           <div className="text-center mb-10 animate-fade-in">
             <h1 className="text-[2rem] font-bold text-text-primary mb-3">
-              Choose your plan
+              {t('heading')}
             </h1>
             <p className="text-text-secondary text-[0.95rem] max-w-[480px] mx-auto">
-              Start free and scale as your team grows. Upgrade anytime to unlock powerful features.
+              {t('subtitle')}
             </p>
           </div>
 
@@ -149,7 +126,7 @@ export function PricingPage() {
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[0.7rem] font-bold uppercase tracking-wider"
                       style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}>
-                      Most Popular
+                      {t('badges.mostPopular')}
                     </div>
                   )}
 
@@ -159,25 +136,25 @@ export function PricingPage() {
                       className="text-[1.1rem] font-bold mb-1"
                       style={{ color: plan.accent }}
                     >
-                      {plan.name}
+                      {t(plan.nameKey)}
                     </h3>
-                    <p className="text-text-muted text-[0.8rem]">{plan.description}</p>
+                    <p className="text-text-muted text-[0.8rem]">{t(plan.descKey)}</p>
                   </div>
 
                   {/* Price */}
                   <div className="mb-6">
                     <span className="text-[2.5rem] font-bold text-text-primary leading-none">
-                      {plan.price}
+                      {t(plan.priceKey)}
                     </span>
                     <span className="text-text-muted text-[0.85rem] ml-1">
-                      {plan.period}
+                      {t(plan.periodKey)}
                     </span>
                   </div>
 
                   {/* Features */}
                   <ul className="flex-1 space-y-3 mb-6">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-[0.85rem]">
+                    {plan.featureKeys.map((fk) => (
+                      <li key={fk} className="flex items-start gap-2.5 text-[0.85rem]">
                         <svg
                           className="mt-0.5 shrink-0"
                           width="16"
@@ -191,11 +168,11 @@ export function PricingPage() {
                         >
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        <span className="text-text-primary">{f}</span>
+                        <span className="text-text-primary">{t(fk)}</span>
                       </li>
                     ))}
-                    {plan.missing.map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-[0.85rem]">
+                    {plan.missingKeys.map((fk) => (
+                      <li key={fk} className="flex items-start gap-2.5 text-[0.85rem]">
                         <svg
                           className="mt-0.5 shrink-0"
                           width="16"
@@ -209,7 +186,7 @@ export function PricingPage() {
                           <line x1="18" y1="6" x2="6" y2="18" />
                           <line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
-                        <span className="text-text-muted line-through">{f}</span>
+                        <span className="text-text-muted line-through">{t(fk)}</span>
                       </li>
                     ))}
                   </ul>
@@ -225,7 +202,7 @@ export function PricingPage() {
                       }}
                       onClick={currentPlan !== 'FREE' ? handleManage : undefined}
                     >
-                      {currentPlan === 'FREE' ? 'Current Plan' : 'Manage Subscription'}
+                      {currentPlan === 'FREE' ? t('badges.currentPlan') : t('cta.manageSubscription')}
                     </button>
                   ) : isDowngrade ? (
                     <button
@@ -250,10 +227,10 @@ export function PricingPage() {
                           <svg className="animate-spin-fast w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                             <circle cx="12" cy="12" r="10" strokeDasharray="62" strokeDashoffset="20" />
                           </svg>
-                          Redirecting…
+                          {t('cta.redirecting')}
                         </span>
                       ) : (
-                        `Upgrade to ${plan.name}`
+                        t('cta.upgrade', { plan: t(plan.nameKey) })
                       )}
                     </button>
                   )}
@@ -264,7 +241,7 @@ export function PricingPage() {
 
           {/* Footer note */}
           <p className="text-text-muted text-[0.75rem] mt-8 text-center animate-fade-in" style={{ animationDelay: '300ms' }}>
-            All plans include a 14-day free trial. Cancel anytime. Prices in USD.
+            {t('footer')}
           </p>
         </div>
       </main>

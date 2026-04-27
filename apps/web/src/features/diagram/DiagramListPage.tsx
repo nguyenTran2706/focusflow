@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Sidebar } from '../../components/Sidebar';
 import { TopNav } from '../../components/TopNav';
 import { BoardTabs } from '../../components/BoardTabs';
@@ -7,6 +8,8 @@ import { useAuthStore } from '../../lib/auth-store';
 import { useDiagrams, useCreateDiagram, useDeleteDiagram } from './hooks/useDiagram';
 
 export function DiagramListPage() {
+  const { t } = useTranslation('diagram');
+  const { t: tc } = useTranslation('common');
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
   const dbUser = useAuthStore((s) => s.dbUser);
@@ -19,7 +22,7 @@ export function DiagramListPage() {
   const handleCreate = async () => {
     try {
       const dg = await createMut.mutateAsync(undefined);
-      navigate(`diagrams/${dg.id}`);
+      navigate(`/boards/${boardId}/diagrams/${dg.id}`);
     } catch {
       /* tier limit */
     }
@@ -31,7 +34,7 @@ export function DiagramListPage() {
       <div className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-          <TopNav title="Diagrams" />
+          <TopNav title={t('list.title')} />
           {boardId && <BoardTabs boardId={boardId} />}
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-[420px] px-8">
@@ -41,16 +44,14 @@ export function DiagramListPage() {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </div>
-              <h2 className="text-[1.2rem] font-bold text-text-primary mb-2">Diagrams is a Pro Feature</h2>
-              <p className="text-text-secondary text-[0.85rem] mb-6">
-                Flow diagrams powered by React Flow are available on the Pro and Pro Max plans.
-              </p>
+              <h2 className="text-[1.2rem] font-bold text-text-primary mb-2">{tc('upgrade.proFeature', { feature: t('list.title') })}</h2>
+              <p className="text-text-secondary text-[0.85rem] mb-6">{tc('upgrade.unlockMessage', { feature: t('list.title') })}</p>
               <div className="flex items-center justify-center gap-3">
                 <button className="px-5 py-2.5 rounded-md text-[0.85rem] font-medium bg-warning text-black hover:bg-warning/90 transition-colors" onClick={() => navigate('/pricing')}>
-                  View Plans
+                  {tc('actions.viewPlans')}
                 </button>
                 <button className="px-5 py-2.5 rounded-md text-[0.85rem] font-medium text-text-secondary hover:bg-white/10 transition-colors" onClick={() => navigate(`/boards/${boardId}`)}>
-                  Back to Kanban
+                  {tc('actions.back')}
                 </button>
               </div>
             </div>
@@ -65,7 +66,7 @@ export function DiagramListPage() {
       <div className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-          <TopNav title="Diagrams" />
+          <TopNav title={t('list.title')} />
           {boardId && <BoardTabs boardId={boardId} />}
           <div className="flex-1 p-6">
             <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
@@ -84,7 +85,7 @@ export function DiagramListPage() {
       <div className="flex min-h-screen">
         <Sidebar />
         <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-          <TopNav title="Diagrams" />
+          <TopNav title={t('list.title')} />
           {boardId && <BoardTabs boardId={boardId} />}
           <div className="flex-1 flex flex-col items-center justify-center text-center py-16 px-8 gap-3 animate-fade-in">
             <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-accent-subtle text-accent-light mb-2">
@@ -93,16 +94,14 @@ export function DiagramListPage() {
                 <path d="M8.5 8.5l7 7" /><path d="M18 6v4h-4" /><path d="M6 18v-4h4" />
               </svg>
             </div>
-            <h2 className="text-[1.15rem] text-text-primary font-semibold">No diagrams yet</h2>
-            <p className="text-text-secondary max-w-[360px] text-[0.875rem]">
-              Create your first diagram to map out flowcharts, architecture, and user flows for your team.
-            </p>
+            <h2 className="text-[1.15rem] text-text-primary font-semibold">{t('list.empty')}</h2>
+            <p className="text-text-secondary max-w-[360px] text-[0.875rem]">{t('list.emptyDescription')}</p>
             <button
               className="mt-3 inline-flex items-center justify-center gap-[6px] px-5 py-2.5 rounded-md text-[0.9rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
               onClick={handleCreate}
               disabled={createMut.isPending}
             >
-              {createMut.isPending ? 'Creating...' : 'Create Diagram'}
+              {createMut.isPending ? tc('actions.creating') : t('list.create')}
             </button>
           </div>
         </main>
@@ -114,12 +113,12 @@ export function DiagramListPage() {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-        <TopNav title="Diagrams" />
+        <TopNav title={t('list.title')} />
         {boardId && <BoardTabs boardId={boardId} />}
         <div className="flex-1 p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-[1rem] font-semibold text-text-primary">
-              Diagrams <span className="text-text-muted font-normal">({diagrams.length})</span>
+              {t('list.title')} <span className="text-text-muted font-normal">({diagrams.length})</span>
             </h3>
             <button
               className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
@@ -129,7 +128,7 @@ export function DiagramListPage() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
               </svg>
-              New Diagram
+              {t('list.create')}
             </button>
           </div>
 
@@ -167,7 +166,7 @@ export function DiagramListPage() {
                     <button
                       className="p-1.5 rounded text-text-muted opacity-0 group-hover:opacity-100 hover:bg-danger/10 hover:text-danger transition-all"
                       onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(dg.id); }}
-                      title="Delete diagram"
+                      title={tc('actions.delete')}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -177,7 +176,7 @@ export function DiagramListPage() {
                 </div>
                 <h3 className="text-[0.95rem] text-text-primary mb-[2px]">{dg.name}</h3>
                 <p className="text-text-muted text-[0.75rem]">
-                  Updated {new Date(dg.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  Updated {new Date(dg.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             ))}

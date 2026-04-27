@@ -1,9 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { Sidebar } from '../components/Sidebar';
 import { TopNav } from '../components/TopNav';
 import { useAuthStore } from '../lib/auth-store';
 import { api } from '../lib/api';
+import Pusher from 'pusher-js';
+
+const pusherKey = import.meta.env.VITE_PUSHER_KEY;
+const pusherCluster = import.meta.env.VITE_PUSHER_CLUSTER ?? 'ap4';
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -63,6 +69,7 @@ const SUB_COLORS: Record<string, string> = {
 // ── Main Component ────────────────────────────────────────────────────────
 
 export function AdminPage() {
+  const { t } = useTranslation('admin');
   const dbUser = useAuthStore((s) => s.dbUser);
   const [tab, setTab] = useState<Tab>('overview');
 
@@ -74,24 +81,24 @@ export function AdminPage() {
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-        <TopNav title="Admin Panel" subtitle="Manage your platform" />
+        <TopNav title={t('title')} />
 
         {/* Tab bar */}
         <div className="flex gap-1 px-6 pt-4 border-b border-border-subtle">
-          {TABS.map((t) => (
+          {TABS.map((tabItem) => (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+              key={tabItem.key}
+              onClick={() => setTab(tabItem.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-[0.82rem] font-medium rounded-t-lg border-b-2 transition-colors ${
-                tab === t.key
+                tab === tabItem.key
                   ? 'border-accent text-accent-light bg-accent-subtle'
                   : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.12]'
               }`}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d={t.icon} />
+                <path d={tabItem.icon} />
               </svg>
-              {t.label}
+              {tabItem.label}
             </button>
           ))}
         </div>
@@ -188,21 +195,22 @@ function UsersTab() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const fetchUsers = (p: number, q: string) => {
-    setLoading(true);
-    api.get<{ users: UserRow[]; total: number }>(`/admin/users?page=${p}&limit=15&search=${encodeURIComponent(q)}`)
-      .then((r) => { setUsers(r.users); setTotal(r.total); })
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
+    api.get<{ users: UserRow[]; total: number }>(`/admin/users?page=${page}&limit=15&search=${encodeURIComponent(search)}`)
+      .then((r) => { if (!cancelled) { setUsers(r.users); setTotal(r.total); } })
       .catch(() => {})
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => { fetchUsers(page, search); }, [page, search]);
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [page, search]);
 
   const updateUser = async (id: string, data: { role?: string; subscription?: string }) => {
     try {
       const updated = await api.patch<UserRow>(`/admin/users/${id}`, data);
       setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...updated } : u)));
-    } catch { /* */ }
+      toast.success('User updated');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to update user'); }
   };
 
   const totalPages = Math.ceil(total / 15);
@@ -339,7 +347,8 @@ function FaqTab() {
         setFaqs((prev) => [created, ...prev]);
       }
       resetForm();
-    } catch { /* */ }
+      toast.success(editId ? 'FAQ updated' : 'FAQ created');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to save FAQ'); }
   };
 
   const handleEdit = (faq: Faq) => {
@@ -350,7 +359,8 @@ function FaqTab() {
     try {
       await api.delete(`/admin/faq/${id}`);
       setFaqs((prev) => prev.filter((f) => f.id !== id));
-    } catch { /* */ }
+      toast.success('FAQ deleted');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to delete FAQ'); }
   };
 
   return (
@@ -444,22 +454,68 @@ function ChatsTab() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const selectedChatRef = useRef<string | null>(null);
+  selectedChatRef.current = selectedChat;
 
+  // Fetch chat list
   useEffect(() => {
     api.get<ChatRow[]>('/admin/chats').then(setChats).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
+  // Auto-scroll on new messages
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // ── Pusher: Real-time updates for the selected chat ──────────────────
+  useEffect(() => {
+    if (!selectedChat || !pusherKey) return;
+
+    const p = new Pusher(pusherKey, { cluster: pusherCluster });
+    const channel = p.subscribe(`chat-${selectedChat}`);
+
+    // Listen for new messages from the user (or bot)
+    channel.bind('new-message', (msg: ChatMsg) => {
+      if (selectedChatRef.current !== selectedChat) return;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
+    });
+
+    return () => {
+      channel.unbind_all();
+      p.unsubscribe(`chat-${selectedChat}`);
+      p.disconnect();
+    };
+  }, [selectedChat]);
+
+  // ── Pusher: Listen for new escalated chats ─────────────────────────────
+  useEffect(() => {
+    if (!pusherKey) return;
+    const p = new Pusher(pusherKey, { cluster: pusherCluster });
+    const channel = p.subscribe('admin-chats');
+
+    channel.bind('chat-escalated', () => {
+      // Refresh the chat list when a new chat is escalated
+      api.get<ChatRow[]>('/admin/chats').then(setChats).catch(() => {});
+    });
+
+    return () => {
+      channel.unbind_all();
+      p.unsubscribe('admin-chats');
+      p.disconnect();
+    };
+  }, []);
 
   const openChat = async (chatId: string) => {
     setSelectedChat(chatId);
     try {
       const detail = await api.get<{ messages: ChatMsg[] }>(`/admin/chats/${chatId}`);
       setMessages(detail.messages);
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to load chat'); }
   };
 
   const sendReply = async () => {
@@ -467,9 +523,12 @@ function ChatsTab() {
     setSending(true);
     try {
       const msg = await api.post<ChatMsg>(`/admin/chats/${selectedChat}/message`, { message: reply });
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
       setReply('');
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to send reply'); }
     finally { setSending(false); }
   };
 
@@ -478,7 +537,20 @@ function ChatsTab() {
       await api.post(`/admin/chats/${chatId}/close`);
       setChats((prev) => prev.filter((c) => c.id !== chatId));
       if (selectedChat === chatId) { setSelectedChat(null); setMessages([]); }
-    } catch { /* */ }
+      toast.success('Chat closed');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to close chat'); }
+  };
+
+  const clearChat = async (chatId: string) => {
+    if (!confirm('Clear all messages in this chat? The user\'s chat will also be reset.')) return;
+    setClearing(true);
+    try {
+      await api.delete(`/admin/chats/${chatId}/clear`);
+      setMessages([]);
+      setChats((prev) => prev.map((c) => c.id === chatId ? { ...c, status: 'BOT', messages: [] } : c));
+      toast.success('Chat cleared');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to clear chat'); }
+    finally { setClearing(false); }
   };
 
   const statusColor: Record<string, string> = {
@@ -539,16 +611,30 @@ function ChatsTab() {
               <span className="text-[0.85rem] font-medium text-text-primary">
                 {chats.find((c) => c.id === selectedChat)?.user.name ?? 'Chat'}
               </span>
-              <button
-                onClick={() => closeChat(selectedChat)}
-                className="px-3 py-1.5 rounded-md text-[0.75rem] font-medium text-danger bg-danger/10 hover:bg-danger/20 transition-colors"
-              >
-                Close Chat
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => clearChat(selectedChat)}
+                  disabled={clearing}
+                  className="px-3 py-1.5 rounded-md text-[0.75rem] font-medium text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
+                >
+                  {clearing ? 'Clearing…' : 'Clear Chat'}
+                </button>
+                <button
+                  onClick={() => closeChat(selectedChat)}
+                  className="px-3 py-1.5 rounded-md text-[0.75rem] font-medium text-danger bg-danger/10 hover:bg-danger/20 transition-colors"
+                >
+                  Close Chat
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+              {messages.length === 0 && (
+                <div className="text-center py-8 text-text-muted text-[0.82rem]">
+                  No messages yet — the chat has been cleared.
+                </div>
+              )}
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.senderRole === 'USER' ? 'justify-start' : 'justify-end'}`}>
                   <div

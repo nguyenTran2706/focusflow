@@ -1,0 +1,11 @@
+{
+  "title": "Bảng điều khiển",
+  "greeting": { "morning": "Chào buổi sáng", "afternoon": "Chào buổi chiều", "evening": "Chào buổi tối" },
+  "subtitle": "{{count}}/{{limit}} workspace · Gói {{plan}}",
+  "subtitleNoLimit": "{{count}} workspace",
+  "subtitleNoLimit_other": "{{count}} workspace",
+  "whatsHappening": "Tổng quan hoạt động trên các workspace của bạn.",
+  "stats": { "totalBoards": "Tổng số boards", "totalCards": "Tổng số thẻ", "completed7d": "Hoàn thành (7 ngày)", "dueSoon": "Sắp đến hạn" },
+  "workspaces": { "title": "Workspace của bạn", "empty": "Chưa có workspace nào", "emptyDescription": "Tạo workspace đầu tiên để bắt đầu quản lý dự án với Kanban board.", "create": "Tạo Workspace", "new": "Workspace mới", "limitReached": "Đã đạt giới hạn workspace", "upgradePlan": "Nâng cấp gói" },
+  "createModal": { "title": "Tạo Workspace", "nameLabel": "Tên workspace", "namePlaceholder": "Nhóm của tôi", "slugLabel": "Đường dẫn URL", "slugPlaceholder": "nhom-cua-toi", "submit": "Tạo Workspace" }
+}

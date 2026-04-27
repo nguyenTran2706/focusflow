@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { api } from '../lib/api';
 import { useAuthStore } from '../lib/auth-store';
 import { useThemeStore, getEffectiveTheme } from '../lib/theme-store';
@@ -23,8 +23,12 @@ export function ChatWidget() {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState<string>('BOT');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [toast, setToast] = useState<{ message: string; id: number } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const openRef = useRef(open);
+  openRef.current = open;
   const pusherRef = useRef<Pusher | null>(null);
   const themeMode = useThemeStore((s) => s.mode);
   const isDark = getEffectiveTheme(themeMode) === 'dark';
@@ -34,9 +38,13 @@ export function ChatWidget() {
   }, [messages]);
 
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (open) {
+      inputRef.current?.focus();
+      setUnreadCount(0);
+    }
   }, [open]);
 
+  // ── Fetch or create chat on first open ──────────────────────────────────
   useEffect(() => {
     if (open && !chatId) {
       api
@@ -50,7 +58,7 @@ export function ChatWidget() {
     }
   }, [open, chatId]);
 
-  // Pusher subscription for real-time admin replies
+  // ── Pusher subscription for real-time messages + chat-cleared ───────────
   useEffect(() => {
     if (!chatId || !pusherKey) return;
 
@@ -58,12 +66,32 @@ export function ChatWidget() {
     pusherRef.current = pusher;
 
     const channel = pusher.subscribe(`chat-${chatId}`);
+
+    // Listen for new messages (from admin, bot, or user on another tab)
     channel.bind('new-message', (msg: ChatMsg) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
         return [...prev, msg];
       });
-      if (msg.senderRole === 'ADMIN') setStatus('HUMAN');
+
+      if (msg.senderRole === 'ADMIN') {
+        setStatus('HUMAN');
+
+        // If widget is closed, show notification toast + increment badge
+        if (!openRef.current) {
+          setUnreadCount((c) => c + 1);
+          showToast(msg.body);
+        }
+      }
+    });
+
+    // Listen for chat cleared/closed by admin
+    channel.bind('chat-cleared', () => {
+      // Reset the widget state completely
+      setMessages([]);
+      setChatId(null);
+      setStatus('BOT');
+      setInput('');
     });
 
     return () => {
@@ -72,6 +100,15 @@ export function ChatWidget() {
       pusher.disconnect();
     };
   }, [chatId]);
+
+  // ── Toast notification ─────────────────────────────────────────────────
+  const showToast = useCallback((message: string) => {
+    const id = Date.now();
+    setToast({ message, id });
+    setTimeout(() => {
+      setToast((prev) => (prev?.id === id ? null : prev));
+    }, 5000);
+  }, []);
 
   const send = async () => {
     if (!input.trim() || !chatId || sending) return;
@@ -169,7 +206,52 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Floating bubble */}
+      {/* ── Toast notification popup ─────────────────────────────────── */}
+      {toast && (
+        <div
+          className="fixed bottom-24 right-6 z-[210] max-w-[340px] animate-[chatSlideUp_0.3s_ease_both]"
+          onClick={() => { setToast(null); setOpen(true); }}
+          style={{ cursor: 'pointer' }}
+        >
+          <div
+            className="flex items-start gap-3 px-4 py-3 rounded-xl border"
+            style={{
+              background: isDark ? '#1e2235' : '#ffffff',
+              borderColor: isDark ? 'rgba(52,211,153,0.25)' : 'rgba(16,185,129,0.25)',
+              boxShadow: isDark
+                ? '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(52,211,153,0.1)'
+                : '0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(16,185,129,0.1)',
+            }}
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+              style={{ background: 'rgba(52,211,153,0.15)' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[0.7rem] font-bold uppercase tracking-wider mb-0.5" style={{ color: '#34d399' }}>
+                Support Agent
+              </p>
+              <p className="text-[0.8rem] leading-snug line-clamp-2" style={{ color: isDark ? '#d4d4e0' : '#2e2e48' }}>
+                {toast.message}
+              </p>
+            </div>
+            <button
+              className="shrink-0 p-1 rounded-md hover:bg-white/10 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setToast(null); }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#6b6f85' : '#8888a0'} strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Floating bubble with unread badge ────────────────────────── */}
       <button
         onClick={() => setOpen((o) => !o)}
         className="fixed bottom-6 right-6 z-[200] w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
@@ -188,9 +270,18 @@ export function ChatWidget() {
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         )}
+        {/* Unread badge */}
+        {!open && unreadCount > 0 && (
+          <span
+            className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[0.6rem] font-bold text-white animate-[badgePop_0.3s_ease_both]"
+            style={{ background: '#ef4444', boxShadow: '0 2px 8px rgba(239,68,68,0.4)' }}
+          >
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
       </button>
 
-      {/* Chat panel */}
+      {/* ── Chat panel ───────────────────────────────────────────────── */}
       {open && (
         <div
           className="fixed bottom-24 right-6 z-[200] w-[380px] max-h-[540px] flex flex-col rounded-2xl border overflow-hidden"
@@ -359,11 +450,16 @@ export function ChatWidget() {
         </div>
       )}
 
-      {/* Animation keyframe */}
+      {/* Animation keyframes */}
       <style>{`
         @keyframes chatSlideUp {
           from { opacity: 0; transform: translateY(16px) scale(0.96); }
           to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes badgePop {
+          0% { transform: scale(0); }
+          50% { transform: scale(1.3); }
+          100% { transform: scale(1); }
         }
         input::placeholder {
           color: ${inputPlaceholder};

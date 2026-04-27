@@ -1,0 +1,38 @@
+{
+  "title": "Profile",
+  "editProfile": "Edit Profile",
+  "saveChanges": "Save Changes",
+  "personalInfo": {
+    "title": "Personal Information",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "accountCreated": "Account Created",
+    "managedByClerk": "Managed by Clerk"
+  },
+  "address": {
+    "title": "Address",
+    "street": "Street Address",
+    "city": "City",
+    "state": "State / Province",
+    "postal": "Postal Code",
+    "country": "Country"
+  },
+  "subscription": {
+    "title": "Subscription",
+    "plan": "{{plan}} Plan",
+    "free": "Basic access with limited features",
+    "pro": "Full feature access with priority support",
+    "proMax": "Everything in Pro plus dedicated support",
+    "upgrade": "Upgrade",
+    "manage": "Manage"
+  },
+  "messages": {
+    "updateSuccess": "Profile updated successfully",
+    "updateFailed": "Failed to update profile"
+  },
+  "language": {
+    "title": "Language & Region",
+    "preferred": "Preferred Language"
+  }
+}

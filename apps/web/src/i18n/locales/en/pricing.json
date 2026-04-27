@@ -1,0 +1,54 @@
+{
+  "title": "Pricing",
+  "heading": "Choose your plan",
+  "subtitle": "Start free and scale as your team grows. Upgrade anytime to unlock powerful features.",
+  "footer": "All plans include a 14-day free trial. Cancel anytime. Prices in USD.",
+  "plans": {
+    "free": {
+      "name": "Free",
+      "price": "$0",
+      "period": "forever",
+      "description": "Perfect for getting started"
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "$12",
+      "period": "/month",
+      "description": "For professionals who need more"
+    },
+    "proMax": {
+      "name": "Pro Max",
+      "price": "$29",
+      "period": "/month",
+      "description": "Everything, unlimited"
+    }
+  },
+  "features": {
+    "workspaces3": "3 workspaces",
+    "boards5": "5 boards per workspace",
+    "basicKanban": "Basic Kanban board",
+    "emailSupport": "Email support",
+    "unlimitedWorkspaces": "Unlimited workspaces",
+    "unlimitedBoards": "Unlimited boards",
+    "aiTaskBreakdown": "AI task breakdown",
+    "realtimeCollab": "Real-time collaboration",
+    "prioritySupport": "Priority support",
+    "customLabels": "Custom labels & fields",
+    "advancedAnalytics": "Advanced analytics",
+    "everythingInPro": "Everything in Pro",
+    "analyticsDashboard": "Advanced analytics dashboard",
+    "dedicatedSupport": "Dedicated support channel",
+    "customIntegrations": "Custom integrations",
+    "teamManagement": "Team management tools",
+    "auditLogs": "Audit logs"
+  },
+  "badges": {
+    "mostPopular": "Most Popular",
+    "currentPlan": "Current Plan"
+  },
+  "cta": {
+    "upgrade": "Upgrade to {{plan}}",
+    "manageSubscription": "Manage Subscription",
+    "redirecting": "Redirecting…"
+  }
+}

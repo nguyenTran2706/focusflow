@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "badge": "이제 AI 기반 작업 분석을 통해",
+    "titleLine1": "프로젝트 관리",
+    "titleLine2": "선명도와 속도",
+    "subtitle": "FocusFlow는 Kanban 보드, 스크럼 스프린트, 화이트보드, 다이어그램 및 AI를 하나의 아름다운 작업 공간에 함께 제공하므로 팀이 더 빠르게 제품을 출시할 수 있습니다.",
+    "cta": "무료로 시작하세요 - 신용카드 없음"
+  },
+  "features": {
+    "heading": "배송에 필요한 모든 것",
+    "subtitle": "아이디어 구상부터 제공까지 팀에 필요한 모든 도구가 한곳에 있습니다.",
+    "kanban": {
+      "title": "Kanban Boards",
+      "description": "드래그 앤 드롭 카드, 열, 실시간 업데이트를 통해 작업을 시각적으로 정리하세요."
+    },
+    "scrum": {
+      "title": "스크럼 및 스프린트",
+      "description": "내장된 스크럼 도구를 사용하여 스프린트를 계획하고, 속도를 추적하고, 백로그를 관리하세요."
+    },
+    "whiteboards": {
+      "title": "Whiteboards",
+      "description": "무한한 협업 캔버스 화이트보드로 아이디어를 스케치하고 브레인스토밍하세요."
+    },
+    "diagrams": {
+      "title": "Diagrams",
+      "description": "React Flow를 사용하여 순서도, 아키텍처 다이어그램 및 사용자 흐름을 만듭니다."
+    },
+    "ai": {
+      "title": "AI 채팅 도우미",
+      "description": "AI 기반 채팅을 통해 작업을 분류하고, 제안을 받고, 계획 속도를 높이세요."
+    },
+    "collaboration": {
+      "title": "Team Collaboration",
+      "description": "구성원을 초대하고, 작업을 할당하고, 작업 공간 전반에서 실시간으로 협업하세요."
+    }
+  },
+  "cta": {
+    "heading": "집중할 준비가 되셨나요?",
+    "subtitle": "FocusFlow를 통해 더 빠르게 배송하는 팀에 합류하세요. 무료로 시작하고 준비가 되면 업그레이드하세요.",
+    "button": "무료 계정 만들기"
+  },
+  "kanbanDemo": {
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  }
+}

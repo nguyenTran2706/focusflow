@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "badge": "Giờ đây với bảng phân tích nhiệm vụ được hỗ trợ bởi AI",
+    "titleLine1": "Quản lý dự án với",
+    "titleLine2": "sự rõ ràng và tốc độ",
+    "subtitle": "FocusFlow kết hợp các bảng Kanban, chạy nước rút Scrum, bảng trắng, sơ đồ và AI trong một không gian làm việc đẹp mắt — để nhóm của bạn có thể triển khai nhanh hơn.",
+    "cta": "Bắt đầu miễn phí - Không có thẻ tín dụng"
+  },
+  "features": {
+    "heading": "Mọi thứ bạn cần để vận chuyển",
+    "subtitle": "Từ ý tưởng đến thực hiện — tất cả công cụ mà nhóm của bạn cần đều ở cùng một nơi.",
+    "kanban": {
+      "title": "Kanban Boards",
+      "description": "Sắp xếp công việc một cách trực quan bằng thẻ, cột kéo và thả và cập nhật theo thời gian thực."
+    },
+    "scrum": {
+      "title": "Scrum & Sprint",
+      "description": "Lập kế hoạch chạy nước rút, theo dõi vận tốc và quản lý tồn đọng bằng các công cụ Scrum tích hợp."
+    },
+    "whiteboards": {
+      "title": "Whiteboards",
+      "description": "Phác thảo ý tưởng và động não bằng bảng trắng canvas vô hạn mang tính cộng tác."
+    },
+    "diagrams": {
+      "title": "Diagrams",
+      "description": "Tạo sơ đồ, sơ đồ kiến ​​trúc và luồng người dùng với React Flow."
+    },
+    "ai": {
+      "title": "Trợ lý trò chuyện AI",
+      "description": "Chia nhỏ nhiệm vụ, nhận đề xuất và tăng tốc lập kế hoạch bằng tính năng trò chuyện được hỗ trợ bởi AI."
+    },
+    "collaboration": {
+      "title": "Team Collaboration",
+      "description": "Mời thành viên, phân công nhiệm vụ và cộng tác trong thời gian thực trên các không gian làm việc."
+    }
+  },
+  "cta": {
+    "heading": "Sẵn sàng để tập trung?",
+    "subtitle": "Tham gia các nhóm vận chuyển nhanh hơn với FocusFlow. Bắt đầu miễn phí, nâng cấp khi bạn đã sẵn sàng.",
+    "button": "Tạo tài khoản miễn phí"
+  },
+  "kanbanDemo": {
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  }
+}

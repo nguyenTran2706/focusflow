@@ -1,0 +1,109 @@
+{
+  "nav": {
+    "dashboard": "Bảng điều khiển",
+    "boards": "Boards",
+    "diagrams": "Sơ đồ",
+    "whiteboards": "Bảng trắng",
+    "pricing": "Bảng giá",
+    "profile": "Hồ sơ",
+    "admin": "Quản trị",
+    "signIn": "Đăng nhập",
+    "signUp": "Đăng ký",
+    "signOut": "Đăng xuất",
+    "getStarted": "Bắt đầu miễn phí"
+  },
+  "actions": {
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "saved": "Đã lưu",
+    "savedAgo": "Đã lưu {{time}} giây trước",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "create": "Tạo",
+    "close": "Đóng",
+    "back": "Quay lại",
+    "next": "Tiếp",
+    "search": "Tìm kiếm",
+    "export": "Xuất",
+    "import": "Nhập",
+    "duplicate": "Nhân bản",
+    "rename": "Đổi tên",
+    "loading": "Đang tải...",
+    "confirm": "Xác nhận",
+    "retry": "Thử lại",
+    "upgrade": "Nâng cấp",
+    "viewPlans": "Xem gói",
+    "maybeLater": "Để sau",
+    "reload": "Tải lại trang",
+    "selectAll": "Chọn tất cả",
+    "clearAll": "Xóa tất cả",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "fitView": "Vừa khung",
+    "creating": "Đang tạo..."
+  },
+  "confirm": {
+    "deleteTitle": "Xác nhận xóa",
+    "deleteMessage": "Bạn có chắc muốn xóa \"{{name}}\"? Hành động này không thể hoàn tác.",
+    "clearAll": "Xóa tất cả nút và đường nối?",
+    "unsavedChanges": "Bạn có thay đổi chưa lưu. Bạn có chắc muốn rời đi?"
+  },
+  "status": {
+    "online": "Trực tuyến",
+    "offline": "Ngoại tuyến",
+    "saveFailed": "Lưu thất bại",
+    "autoSaveFailed": "Tự động lưu thất bại"
+  },
+  "theme": {
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống"
+  },
+  "language": {
+    "label": "Ngôn ngữ",
+    "switchTo": "Đổi ngôn ngữ"
+  },
+  "errors": {
+    "somethingWentWrong": "Đã xảy ra lỗi",
+    "unexpectedError": "Đã xảy ra lỗi không mong đợi.",
+    "missingClerkKey": "Thiếu Clerk Key",
+    "setClerkKey": "Thiết lập {{key}} trong file {{file}} của bạn.",
+    "getKeyFrom": "Lấy key từ {{source}}"
+  },
+  "footer": {
+    "copyright": "© {{year}} FocusFlow"
+  },
+  "search": {
+    "placeholder": "Tìm kiếm boards, sơ đồ, bảng trắng...",
+    "noResults": "Không tìm thấy kết quả",
+    "recentSearches": "Tìm kiếm gần đây"
+  },
+  "shortcuts": {
+    "title": "Phím tắt",
+    "search": "Tìm kiếm",
+    "save": "Lưu",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "selectAll": "Chọn tất cả",
+    "duplicate": "Nhân bản",
+    "delete": "Xóa",
+    "showShortcuts": "Hiện phím tắt"
+  },
+  "upgrade": {
+    "proFeature": "{{feature}} là tính năng Pro",
+    "unlockMessage": "Mở khóa {{feature}} và nhiều tính năng mạnh mẽ hơn bằng cách nâng cấp lên gói Pro hoặc Pro Max.",
+    "includedWithPro": "Bao gồm trong Pro",
+    "features": {
+      "unlimitedBoards": "Boards và workspace không giới hạn",
+      "scrumBoards": "Scrum boards và lập kế hoạch sprint",
+      "whiteboardsDiagrams": "Bảng trắng và sơ đồ",
+      "aiTaskBreakdown": "Phân tích công việc bằng AI",
+      "realtimeCollab": "Cộng tác thời gian thực"
+    }
+  },
+  "members_one": "{{count}} thành viên",
+  "members_other": "{{count}} thành viên",
+  "boards_one": "{{count}} board",
+  "boards_other": "{{count}} boards"
+}

@@ -1,0 +1,36 @@
+{
+  "title": "스크럼 보드",
+  "sprint": {
+    "planning": "스프린트 계획",
+    "active": "진행 중인 스프린트",
+    "completed": "완료됨",
+    "noActive": "진행 중인 스프린트 없음",
+    "create": "스프린트 만들기",
+    "start": "스프린트 시작",
+    "complete": "스프린트 완료",
+    "name": "스프린트 이름",
+    "goal": "스프린트 목표",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "duration": "기간",
+    "days": "{{count}}일"
+  },
+  "backlog": {
+    "title": "백로그",
+    "empty": "백로그가 비어 있습니다",
+    "moveToSprint": "스프린트로 이동",
+    "storyPoints": "스토리 포인트"
+  },
+  "velocity": {
+    "title": "벨로시티 차트",
+    "planned": "계획",
+    "completed": "완료",
+    "average": "평균 벨로시티"
+  },
+  "burndown": {
+    "title": "번다운 차트",
+    "ideal": "이상",
+    "actual": "실제",
+    "remaining": "남은"
+  }
+}

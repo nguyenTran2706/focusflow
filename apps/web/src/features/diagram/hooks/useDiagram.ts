@@ -10,8 +10,15 @@ export interface DiagramSummary {
   updatedAt: string;
 }
 
+import type { Node, Edge } from '@xyflow/react';
+
+export interface DiagramData {
+  nodes: Node[];
+  edges: Edge[];
+}
+
 export interface DiagramFull extends DiagramSummary {
-  data: any;
+  data: DiagramData | null;
 }
 
 export function useDiagrams(boardId: string | undefined) {
@@ -42,9 +49,11 @@ export function useCreateDiagram(boardId: string | undefined) {
 export function useUpdateDiagram(id: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { name?: string; data?: any }) =>
+    mutationFn: (payload: { name?: string; data?: DiagramData }) =>
       api.patch<DiagramFull>(`/diagrams/${id}`, payload),
-    onSuccess: (_, vars) => {
+    onSuccess: (updatedDiagram, vars) => {
+      // Always update the single-diagram cache with the server response
+      qc.setQueryData(['diagram', id], updatedDiagram);
       if (vars.name !== undefined) {
         qc.invalidateQueries({ queryKey: ['diagrams'] });
       }

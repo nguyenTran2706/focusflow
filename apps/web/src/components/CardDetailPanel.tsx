@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { useAuthStore } from '../lib/auth-store';
 
@@ -195,7 +196,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
       const updated = await api.patch<CardDetail>(`/cards/${card.id}`, { [field]: value });
       setCard((prev) => prev ? { ...prev, ...updated } : prev);
       onUpdate();
-    } catch { }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Action failed'); }
   };
 
   const saveTitle = () => {
@@ -246,7 +247,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
       await api.patch(`/cards/${card.id}/move`, { targetColumnId, rank: '0' });
       setCard({ ...card, columnId: targetColumnId });
       onUpdate();
-    } catch { }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Action failed'); }
     setShowStatusMenu(false);
   };
 
@@ -259,7 +260,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
       setCard({ ...card, comments: [...card.comments, comment] });
       setCommentText('');
       onUpdate();
-    } catch { }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Action failed'); }
     finally { setSubmittingComment(false); }
   };
 
@@ -270,7 +271,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
       setCard({ ...card, comments: card.comments.map(c => c.id === commentId ? updated : c) });
       setEditingCommentId(null);
       setEditingCommentBody('');
-    } catch { }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Action failed'); }
   };
 
   const deleteComment = async (commentId: string) => {
@@ -279,7 +280,7 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
       await api.delete(`/comments/${commentId}`);
       setCard({ ...card, comments: card.comments.filter(c => c.id !== commentId) });
       onUpdate();
-    } catch { }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Action failed'); }
   };
 
   const handleDuplicate = async () => {

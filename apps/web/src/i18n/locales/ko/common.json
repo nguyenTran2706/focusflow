@@ -1,0 +1,17 @@
+{
+  "nav": { "dashboard": "대시보드", "boards": "보드", "diagrams": "다이어그램", "whiteboards": "화이트보드", "pricing": "요금제", "profile": "프로필", "admin": "관리자", "signIn": "로그인", "signUp": "가입하기", "signOut": "로그아웃", "getStarted": "무료로 시작하기" },
+  "actions": { "save": "저장", "saving": "저장 중...", "saved": "저장됨", "savedAgo": "{{time}}초 전 저장됨", "cancel": "취소", "delete": "삭제", "edit": "편집", "create": "만들기", "close": "닫기", "back": "뒤로", "next": "다음", "search": "검색", "export": "내보내기", "import": "가져오기", "duplicate": "복제", "rename": "이름 변경", "loading": "로딩 중...", "confirm": "확인", "retry": "재시도", "upgrade": "업그레이드", "viewPlans": "요금제 보기", "maybeLater": "나중에", "reload": "페이지 새로고침", "selectAll": "전체 선택", "clearAll": "전체 삭제", "undo": "실행 취소", "redo": "다시 실행", "fitView": "화면 맞춤", "creating": "만드는 중..." },
+  "confirm": { "deleteTitle": "삭제 확인", "deleteMessage": "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.", "clearAll": "모든 노드와 엣지를 삭제하시겠습니까?", "unsavedChanges": "저장되지 않은 변경 사항이 있습니다. 정말 떠나시겠습니까?" },
+  "status": { "online": "온라인", "offline": "오프라인", "saveFailed": "저장 실패", "autoSaveFailed": "자동 저장 실패" },
+  "theme": { "light": "라이트", "dark": "다크", "system": "시스템" },
+  "language": { "label": "언어", "switchTo": "언어 변경" },
+  "errors": { "somethingWentWrong": "문제가 발생했습니다", "unexpectedError": "예기치 않은 오류가 발생했습니다.", "missingClerkKey": "Clerk Key 누락", "setClerkKey": "{{file}} 파일에 {{key}}를 설정해 주세요.", "getKeyFrom": "{{source}}에서 키를 받으세요" },
+  "footer": { "copyright": "© {{year}} FocusFlow" },
+  "search": { "placeholder": "보드, 다이어그램, 화이트보드 검색...", "noResults": "결과를 찾을 수 없습니다", "recentSearches": "최근 검색" },
+  "shortcuts": { "title": "키보드 단축키", "search": "검색", "save": "저장", "undo": "실행 취소", "redo": "다시 실행", "selectAll": "전체 선택", "duplicate": "복제", "delete": "삭제", "showShortcuts": "단축키 보기" },
+  "upgrade": { "proFeature": "{{feature}}은(는) Pro 기능입니다", "unlockMessage": "Pro 또는 Pro Max 요금제로 업그레이드하여 {{feature}} 및 더 많은 강력한 기능을 사용하세요.", "includedWithPro": "Pro에 포함", "features": { "unlimitedBoards": "무제한 보드 및 워크스페이스", "scrumBoards": "스크럼 보드 및 스프린트 계획", "whiteboardsDiagrams": "화이트보드 및 다이어그램 편집기", "aiTaskBreakdown": "AI 기반 작업 분해", "realtimeCollab": "실시간 협업" } },
+  "members_one": "멤버 {{count}}명",
+  "members_other": "멤버 {{count}}명",
+  "boards_one": "보드 {{count}}개",
+  "boards_other": "보드 {{count}}개"
+}

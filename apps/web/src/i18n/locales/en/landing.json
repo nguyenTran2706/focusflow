@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "badge": "Now with AI-powered task breakdown",
+    "titleLine1": "Manage projects with",
+    "titleLine2": "clarity and speed",
+    "subtitle": "FocusFlow brings Kanban boards, Scrum sprints, whiteboards, diagrams, and AI together in one beautiful workspace — so your team can ship faster.",
+    "cta": "Start Free — No Credit Card"
+  },
+  "features": {
+    "heading": "Everything you need to ship",
+    "subtitle": "From ideation to delivery — all the tools your team needs in one place.",
+    "kanban": {
+      "title": "Kanban Boards",
+      "description": "Organize work visually with drag-and-drop cards, columns, and real-time updates."
+    },
+    "scrum": {
+      "title": "Scrum & Sprints",
+      "description": "Plan sprints, track velocity, and manage backlogs with built-in Scrum tools."
+    },
+    "whiteboards": {
+      "title": "Whiteboards",
+      "description": "Sketch ideas and brainstorm with collaborative infinite canvas whiteboards."
+    },
+    "diagrams": {
+      "title": "Diagrams",
+      "description": "Create flowcharts, architecture diagrams, and user flows with React Flow."
+    },
+    "ai": {
+      "title": "AI Chat Assistant",
+      "description": "Break down tasks, get suggestions, and speed up planning with AI-powered chat."
+    },
+    "collaboration": {
+      "title": "Team Collaboration",
+      "description": "Invite members, assign tasks, and collaborate in real-time across workspaces."
+    }
+  },
+  "cta": {
+    "heading": "Ready to get focused?",
+    "subtitle": "Join teams who ship faster with FocusFlow. Start free, upgrade when you're ready.",
+    "button": "Create Free Account"
+  },
+  "kanbanDemo": {
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  }
+}

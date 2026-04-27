@@ -1,0 +1,54 @@
+{
+  "title": "价格",
+  "heading": "选择您的方案",
+  "subtitle": "免费开始，随着团队增长而扩展。随时可以升级。",
+  "footer": "所有方案均包含 14 天免费试用。随时可取消。价格以美元计。",
+  "plans": {
+    "free": {
+      "name": "免费",
+      "price": "$0",
+      "period": "永久",
+      "description": "适合入门"
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "$12",
+      "period": "/月",
+      "description": "适合需要更多功能的专业人士"
+    },
+    "proMax": {
+      "name": "Pro Max",
+      "price": "$29",
+      "period": "/月",
+      "description": "一切无限制"
+    }
+  },
+  "features": {
+    "workspaces3": "3 个工作区",
+    "boards5": "每个工作区 5 个看板",
+    "basicKanban": "基本看板",
+    "emailSupport": "邮件支持",
+    "unlimitedWorkspaces": "无限工作区",
+    "unlimitedBoards": "无限看板",
+    "aiTaskBreakdown": "AI 任务分解",
+    "realtimeCollab": "实时协作",
+    "prioritySupport": "优先支持",
+    "customLabels": "自定义标签和字段",
+    "advancedAnalytics": "高级分析",
+    "everythingInPro": "Pro 的所有功能",
+    "analyticsDashboard": "高级分析仪表盘",
+    "dedicatedSupport": "专属支持渠道",
+    "customIntegrations": "自定义集成",
+    "teamManagement": "团队管理工具",
+    "auditLogs": "审计日志"
+  },
+  "badges": {
+    "mostPopular": "最受欢迎",
+    "currentPlan": "当前方案"
+  },
+  "cta": {
+    "upgrade": "升级到{{plan}}",
+    "manageSubscription": "管理订阅",
+    "redirecting": "跳转中…"
+  }
+}

@@ -22,16 +22,16 @@ export function useRealtime(boardId?: string) {
       queryClient.invalidateQueries({ queryKey: ['board', boardId] });
     });
 
-    channel.bind('whiteboard.updated', (data: any) => {
+    channel.bind('whiteboard.updated', (data: { id?: string } | undefined) => {
       queryClient.invalidateQueries({ queryKey: ['whiteboards', boardId] });
-      if (data && data.id) {
+      if (data?.id) {
         queryClient.invalidateQueries({ queryKey: ['whiteboard', data.id] });
       }
     });
 
-    channel.bind('diagram.updated', (data: any) => {
+    channel.bind('diagram.updated', (data: { id?: string } | undefined) => {
       queryClient.invalidateQueries({ queryKey: ['diagrams', boardId] });
-      if (data && data.id) {
+      if (data?.id) {
         queryClient.invalidateQueries({ queryKey: ['diagram', data.id] });
       }
     });

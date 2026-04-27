@@ -1,0 +1,8 @@
+{
+  "title": "Hồ sơ", "editProfile": "Sửa hồ sơ", "saveChanges": "Lưu thay đổi",
+  "personalInfo": { "title": "Thông tin cá nhân", "fullName": "Họ và tên", "email": "Email", "phone": "Số điện thoại", "accountCreated": "Ngày tạo tài khoản", "managedByClerk": "Quản lý bởi Clerk" },
+  "address": { "title": "Địa chỉ", "street": "Địa chỉ đường", "city": "Thành phố", "state": "Tỉnh / Thành", "postal": "Mã bưu chính", "country": "Quốc gia" },
+  "subscription": { "title": "Đăng ký", "plan": "Gói {{plan}}", "free": "Truy cập cơ bản với tính năng giới hạn", "pro": "Truy cập đầy đủ tính năng với hỗ trợ ưu tiên", "proMax": "Mọi thứ trong Pro cùng hỗ trợ riêng", "upgrade": "Nâng cấp", "manage": "Quản lý" },
+  "messages": { "updateSuccess": "Cập nhật hồ sơ thành công", "updateFailed": "Cập nhật hồ sơ thất bại" },
+  "language": { "title": "Ngôn ngữ & Khu vực", "preferred": "Ngôn ngữ ưu thích" }
+}

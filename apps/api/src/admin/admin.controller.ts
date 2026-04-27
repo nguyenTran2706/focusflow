@@ -178,9 +178,31 @@ export class AdminController {
 
   @Post('chats/:id/close')
   async closeChat(@Param('id') id: string) {
-    return this.prisma.chat.update({
+    const chat = await this.prisma.chat.update({
       where: { id },
       data: { status: 'CLOSED' },
     });
+
+    // Notify the user's ChatWidget to reset
+    await this.pusher.trigger(`chat-${id}`, 'chat-cleared', { reason: 'closed' });
+
+    return chat;
+  }
+
+  @Delete('chats/:id/clear')
+  async clearChat(@Param('id') id: string) {
+    // Delete all messages in this chat
+    await this.prisma.chatMessage.deleteMany({ where: { chatId: id } });
+
+    // Reset chat status back to BOT
+    const chat = await this.prisma.chat.update({
+      where: { id },
+      data: { status: 'BOT' },
+    });
+
+    // Notify the user's ChatWidget to reset
+    await this.pusher.trigger(`chat-${id}`, 'chat-cleared', { reason: 'cleared' });
+
+    return chat;
   }
 }

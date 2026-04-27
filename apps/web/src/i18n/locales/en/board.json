@@ -1,0 +1,51 @@
+{
+  "tabs": {
+    "summary": "Summary",
+    "board": "Board",
+    "scrum": "Scrum",
+    "diagrams": "Diagrams",
+    "whiteboards": "Whiteboards"
+  },
+  "columns": {
+    "addColumn": "Add Column",
+    "newColumn": "New Column",
+    "deleteColumn": "Delete Column"
+  },
+  "cards": {
+    "addCard": "Add Card",
+    "newCard": "New Card",
+    "deleteCard": "Delete Card",
+    "noDescription": "No description",
+    "assignee": "Assignee",
+    "dueDate": "Due Date",
+    "type": "Type",
+    "description": "Description",
+    "comments": "Comments",
+    "attachments": "Attachments"
+  },
+  "workspace": {
+    "settings": "Workspace Settings",
+    "members": "Members",
+    "invite": "Invite",
+    "inviteMembers": "Invite Members",
+    "role": "Role",
+    "removeMember": "Remove Member",
+    "rename": "Rename",
+    "delete": "Delete Workspace"
+  },
+  "summary": {
+    "completed7d": "Completed (7d)",
+    "updated7d": "Updated (7d)",
+    "created7d": "Created (7d)",
+    "dueSoon": "Due Soon",
+    "ofTotalCards": "of {{count}} total cards",
+    "statusOverview": "Status Overview",
+    "recentActivity": "Recent Activity",
+    "noRecentActivity": "No recent activity",
+    "priorityBreakdown": "Priority Breakdown",
+    "typesOfWork": "Types of Work",
+    "noCardsYet": "No cards yet",
+    "total": "total",
+    "unableToLoad": "Unable to load summary"
+  }
+}

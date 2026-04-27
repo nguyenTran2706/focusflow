@@ -51,6 +51,14 @@ enum SubTier {
   PRO_MAX
 }
 
+// Used for Stripe webhook idempotency — prevents duplicate event processing
+model ProcessedEvent {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  eventId   String   @unique
+  type      String
+  createdAt DateTime @default(now())
+}
+
 // ─── Tenancy ────────────────────────────────────────────────────────────────
 
 model Workspace {

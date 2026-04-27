@@ -7,17 +7,25 @@
     "apps/*"
   ],
   "scripts": {
+    "dev": "node scripts/dev.js",
     "dev:web": "npm run dev -w apps/web",
     "dev:api": "npm run start:dev -w apps/api",
     "dev:ai": "npm run start:dev -w apps/ai-worker",
     "build": "npm run build -w apps/web && npm run build -w apps/api && npm run build -w apps/ai-worker",
     "test": "npm test -w apps/web && npm test -w apps/api && npm test -w apps/ai-worker",
-    "lint": "npm run lint -w apps/web && npm run lint -w apps/api && npm run lint -w apps/ai-worker"
+    "lint": "npm run lint -w apps/web && npm run lint -w apps/api && npm run lint -w apps/ai-worker",
+    "translate": "node scripts/translate-i18n.js",
+    "translate:force": "node scripts/translate-i18n.js --force",
+    "i18n:check": "node scripts/check-i18n.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "mongodb": "^7.1.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "google-translate-api-x": "^10.7.2"
   }
 }

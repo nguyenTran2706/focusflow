@@ -1,0 +1,7 @@
+{
+  "title": "Scrum Board",
+  "sprint": { "planning": "Lập kế hoạch Sprint", "active": "Sprint đang chạy", "completed": "Hoàn thành", "noActive": "Chưa có sprint nào", "create": "Tạo Sprint", "start": "Bắt đầu Sprint", "complete": "Hoàn thành Sprint", "name": "Tên Sprint", "goal": "Mục tiêu Sprint", "startDate": "Ngày bắt đầu", "endDate": "Ngày kết thúc", "duration": "Thời gian", "days": "{{count}} ngày" },
+  "backlog": { "title": "Backlog", "empty": "Backlog trống", "moveToSprint": "Chuyển vào Sprint", "storyPoints": "Story Points" },
+  "velocity": { "title": "Biểu đồ Velocity", "planned": "Dự kiến", "completed": "Hoàn thành", "average": "Velocity trung bình" },
+  "burndown": { "title": "Biểu đồ Burndown", "ideal": "Lý tưởng", "actual": "Thực tế", "remaining": "Còn lại" }
+}

@@ -1,0 +1,35 @@
+{
+  "title": "仪表盘",
+  "greeting": {
+    "morning": "早上好",
+    "afternoon": "下午好",
+    "evening": "晚上好"
+  },
+  "subtitle": "{{count}}/{{limit}} 个工作区 · {{plan}} 方案",
+  "subtitleNoLimit": "{{count}} 个工作区",
+  "subtitleNoLimit_other": "{{count}} 个工作区",
+  "whatsHappening": "以下是您各工作区的最新动态。",
+  "stats": {
+    "totalBoards": "看板总数",
+    "totalCards": "卡片总数",
+    "completed7d": "已完成（7天）",
+    "dueSoon": "即将到期"
+  },
+  "workspaces": {
+    "title": "您的工作区",
+    "empty": "还没有工作区",
+    "emptyDescription": "创建您的第一个工作区，开始使用看板管理项目。",
+    "create": "创建工作区",
+    "new": "新建工作区",
+    "limitReached": "已达到工作区上限",
+    "upgradePlan": "升级方案"
+  },
+  "createModal": {
+    "title": "创建工作区",
+    "nameLabel": "工作区名称",
+    "namePlaceholder": "我的团队",
+    "slugLabel": "URL 标识",
+    "slugPlaceholder": "my-team",
+    "submit": "创建工作区"
+  }
+}

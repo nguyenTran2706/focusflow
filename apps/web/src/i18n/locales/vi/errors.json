@@ -1,0 +1,17 @@
+{
+  "generic": "Đã xảy ra lỗi. Vui lòng thử lại.",
+  "network": "Lỗi mạng. Kiểm tra kết nối của bạn.",
+  "unauthorized": "Bạn chưa được xác thực. Vui lòng đăng nhập.",
+  "forbidden": "Bạn không có quyền thực hiện hành động này.",
+  "notFound": "Không tìm thấy tài nguyên yêu cầu.",
+  "serverError": "Lỗi máy chủ. Vui lòng thử lại sau.",
+  "INVALID_CREDENTIALS": "Email hoặc mật khẩu không đúng.",
+  "EMAIL_TAKEN": "Email này đã được đăng ký.",
+  "WORKSPACE_LIMIT": "Bạn đã đạt giới hạn workspace. Nâng cấp để tạo thêm.",
+  "BOARD_LIMIT": "Bạn đã đạt giới hạn board cho workspace này.",
+  "RATE_LIMITED": "Quá nhiều yêu cầu. Vui lòng đợi một lát.",
+  "SAVE_FAILED": "Lưu thất bại. Thay đổi của bạn được giữ cục bộ.",
+  "DELETE_FAILED": "Xóa thất bại. Vui lòng thử lại.",
+  "INVITE_FAILED": "Gửi lời mời thất bại.",
+  "EXPORT_FAILED": "Xuất thất bại. Vui lòng thử lại."
+}

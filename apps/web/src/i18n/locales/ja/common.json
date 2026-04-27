@@ -1,0 +1,109 @@
+{
+  "nav": {
+    "dashboard": "ダッシュボード",
+    "boards": "ボード",
+    "diagrams": "ダイアグラム",
+    "whiteboards": "ホワイトボード",
+    "pricing": "料金プラン",
+    "profile": "プロフィール",
+    "admin": "管理",
+    "signIn": "ログイン",
+    "signUp": "新規登録",
+    "signOut": "ログアウト",
+    "getStarted": "無料で始める"
+  },
+  "actions": {
+    "save": "保存",
+    "saving": "保存中...",
+    "saved": "保存済み",
+    "savedAgo": "{{time}}秒前に保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "create": "作成",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "search": "検索",
+    "export": "エクスポート",
+    "import": "インポート",
+    "duplicate": "複製",
+    "rename": "名前変更",
+    "loading": "読み込み中...",
+    "confirm": "確認",
+    "retry": "再試行",
+    "upgrade": "アップグレード",
+    "viewPlans": "プランを見る",
+    "maybeLater": "あとで",
+    "reload": "ページを再読み込み",
+    "selectAll": "すべて選択",
+    "clearAll": "すべてクリア",
+    "undo": "元に戻す",
+    "redo": "やり直し",
+    "fitView": "画面に合わせる",
+    "creating": "作成中..."
+  },
+  "confirm": {
+    "deleteTitle": "削除の確認",
+    "deleteMessage": "「{{name}}」を削除しますか？この操作は取り消せません。",
+    "clearAll": "すべてのノードとエッジを削除しますか？",
+    "unsavedChanges": "保存されていない変更があります。本当に離れますか？"
+  },
+  "status": {
+    "online": "オンライン",
+    "offline": "オフライン",
+    "saveFailed": "保存失敗",
+    "autoSaveFailed": "自動保存失敗"
+  },
+  "theme": {
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム"
+  },
+  "language": {
+    "label": "言語",
+    "switchTo": "言語を変更"
+  },
+  "errors": {
+    "somethingWentWrong": "問題が発生しました",
+    "unexpectedError": "予期しないエラーが発生しました。",
+    "missingClerkKey": "Clerk Keyが不足しています",
+    "setClerkKey": "{{file}}ファイルに{{key}}を設定してください。",
+    "getKeyFrom": "{{source}}からキーを取得してください"
+  },
+  "footer": {
+    "copyright": "© {{year}} FocusFlow"
+  },
+  "search": {
+    "placeholder": "ボード、ダイアグラム、ホワイトボードを検索...",
+    "noResults": "結果が見つかりません",
+    "recentSearches": "最近の検索"
+  },
+  "shortcuts": {
+    "title": "キーボードショートカット",
+    "search": "検索",
+    "save": "保存",
+    "undo": "元に戻す",
+    "redo": "やり直し",
+    "selectAll": "すべて選択",
+    "duplicate": "複製",
+    "delete": "削除",
+    "showShortcuts": "ショートカットを表示"
+  },
+  "upgrade": {
+    "proFeature": "{{feature}}はPro機能です",
+    "unlockMessage": "ProまたはPro Maxプランにアップグレードして、{{feature}}やその他の強力な機能をご利用ください。",
+    "includedWithPro": "Proに含まれる機能",
+    "features": {
+      "unlimitedBoards": "無制限のボードとワークスペース",
+      "scrumBoards": "スクラムボードとスプリント計画",
+      "whiteboardsDiagrams": "ホワイトボードとダイアグラムエディタ",
+      "aiTaskBreakdown": "AI搭載タスク分解",
+      "realtimeCollab": "リアルタイムコラボレーション"
+    }
+  },
+  "members_one": "{{count}}人のメンバー",
+  "members_other": "{{count}}人のメンバー",
+  "boards_one": "{{count}}個のボード",
+  "boards_other": "{{count}}個のボード"
+}

@@ -19,6 +19,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { toast } from 'sonner';
 import { Sidebar } from '../components/Sidebar';
 import { TopNav } from '../components/TopNav';
 import { Modal } from '../components/Modal';
@@ -385,14 +386,14 @@ export function WorkspacePage() {
     try {
       const data = await api.get<{ name: string; slug: string; plan: string }>(`/workspaces/${workspaceId}`);
       setWsName(data.name); setWsSlug(data.slug); setWsPlan(data.plan);
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to load workspace'); }
   };
 
   const fetchBoards = async () => {
     try {
       const data = await api.get<BoardSummary[]>(`/workspaces/${workspaceId}/boards`);
       setBoards(data);
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to load boards'); }
     finally { setLoading(false); }
   };
 
@@ -405,7 +406,7 @@ export function WorkspacePage() {
       setShowCreate(false);
       setBoardName('');
       navigate(`/boards/${newBoard.id}`);
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to create board'); }
   };
 
   const renameWorkspace = async () => {
@@ -414,14 +415,15 @@ export function WorkspacePage() {
     try {
       await api.patch(`/workspaces/${workspaceId}`, { name: wsNameDraft });
       fetchWorkspace();
-    } catch { /* */ }
+      toast.success('Workspace renamed');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to rename workspace'); }
   };
 
   const deleteWorkspace = async () => {
     try {
       await api.delete(`/workspaces/${workspaceId}`);
       navigate('/dashboard');
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to delete workspace'); }
   };
 
   return (
@@ -620,7 +622,7 @@ export function BoardPage() {
     try {
       const data = await api.get<Board>(`/boards/${boardId}`);
       setBoard(data);
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to load board'); }
     finally { setLoading(false); }
   };
 
@@ -661,7 +663,7 @@ export function BoardPage() {
       setNewColName('');
       setAddingCol(false);
       fetchBoard();
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to add column'); }
   };
 
   const addCard = async (e: React.FormEvent, columnId: string) => {
@@ -672,7 +674,7 @@ export function BoardPage() {
       setNewCardTitle('');
       setAddingCardCol(null);
       fetchBoard();
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to add card'); }
   };
 
   const deleteCard = async (cardId: string) => {
@@ -680,7 +682,7 @@ export function BoardPage() {
       await api.delete(`/cards/${cardId}`);
       setSelectedCardId(null);
       fetchBoard();
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to delete card'); }
   };
 
   const duplicateCard = async (cardId: string) => {
@@ -688,7 +690,7 @@ export function BoardPage() {
       await api.post(`/cards/${cardId}/duplicate`);
       setSelectedCardId(null);
       fetchBoard();
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to duplicate card'); }
   };
 
   const renameBoardSave = async () => {
@@ -697,14 +699,15 @@ export function BoardPage() {
     try {
       await api.patch(`/boards/${boardId}`, { name: boardNameDraft });
       fetchBoard();
-    } catch { /* */ }
+      toast.success('Board renamed');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to rename board'); }
   };
 
   const deleteBoardConfirm = async () => {
     try {
       await api.delete(`/boards/${boardId}`);
       navigate(board ? `/workspaces/${board.workspaceId}` : '/dashboard');
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to delete board'); }
   };
 
   const renameColumn = async (colId: string) => {
@@ -713,7 +716,7 @@ export function BoardPage() {
       await api.patch(`/columns/${colId}`, { name: renamingColName });
       setRenamingColId(null);
       fetchBoard();
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to rename column'); }
   };
 
   const deleteColumn = async (colId: string) => {
@@ -721,7 +724,7 @@ export function BoardPage() {
       await api.delete(`/columns/${colId}`);
       setColumnMenuId(null);
       fetchBoard();
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to delete column'); }
   };
 
   // Keyboard shortcuts

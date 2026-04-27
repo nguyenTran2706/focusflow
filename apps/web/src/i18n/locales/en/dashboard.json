@@ -1,0 +1,35 @@
+{
+  "title": "Dashboard",
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening"
+  },
+  "subtitle": "{{count}}/{{limit}} workspaces · {{plan}} plan",
+  "subtitleNoLimit": "{{count}} workspace",
+  "subtitleNoLimit_other": "{{count}} workspaces",
+  "whatsHappening": "Here's what's happening across your workspaces.",
+  "stats": {
+    "totalBoards": "Total Boards",
+    "totalCards": "Total Cards",
+    "completed7d": "Completed (7d)",
+    "dueSoon": "Due Soon"
+  },
+  "workspaces": {
+    "title": "Your Workspaces",
+    "empty": "No workspaces yet",
+    "emptyDescription": "Create your first workspace to start organizing your projects with Kanban boards.",
+    "create": "Create Workspace",
+    "new": "New Workspace",
+    "limitReached": "Workspace limit reached",
+    "upgradePlan": "Upgrade Plan"
+  },
+  "createModal": {
+    "title": "Create Workspace",
+    "nameLabel": "Workspace name",
+    "namePlaceholder": "My Team",
+    "slugLabel": "URL slug",
+    "slugPlaceholder": "my-team",
+    "submit": "Create Workspace"
+  }
+}

@@ -184,21 +184,21 @@ export class SprintsService {
 
     // Calculate velocity from completed cards (cards in "Done" columns)
     const completedPoints = sprint.cards
-      .filter((c) => {
+      .filter((c: any) => {
         const colName = c.column.name.toLowerCase();
         return colName === 'done' || colName === 'complete' || colName === 'completed';
       })
-      .reduce((sum, c) => sum + (c.storyPoints ?? 0), 0);
+      .reduce((sum: number, c: any) => sum + (c.storyPoints ?? 0), 0);
 
     // Move incomplete cards back to backlog (remove from sprint)
-    const incompleteCards = sprint.cards.filter((c) => {
+    const incompleteCards = sprint.cards.filter((c: any) => {
       const colName = c.column.name.toLowerCase();
       return colName !== 'done' && colName !== 'complete' && colName !== 'completed';
     });
 
     if (incompleteCards.length > 0) {
       await this.prisma.card.updateMany({
-        where: { id: { in: incompleteCards.map((c) => c.id) } },
+        where: { id: { in: incompleteCards.map((c: any) => c.id) } },
         data: { sprintId: null },
       });
     }
@@ -283,7 +283,7 @@ export class SprintsService {
     if (!sprint) throw new NotFoundException('Sprint not found');
     await this.assertMember(sprint.board.workspaceId, userId);
 
-    const totalPoints = sprint.cards.reduce((sum, c) => sum + (c.storyPoints ?? 0), 0);
+    const totalPoints = sprint.cards.reduce((sum: number, c: any) => sum + (c.storyPoints ?? 0), 0);
     const totalDays = Math.ceil(
       (sprint.endDate.getTime() - sprint.startDate.getTime()) / (1000 * 60 * 60 * 24),
     );
@@ -295,11 +295,11 @@ export class SprintsService {
     }
 
     // Build actual burndown from card completion dates
-    const completedCards = sprint.cards.filter((c) => {
+    const completedCards = sprint.cards.filter((c: any) => {
       const colName = c.column.name.toLowerCase();
       return colName === 'done' || colName === 'complete' || colName === 'completed';
     });
-    const completedPoints = completedCards.reduce((sum, c) => sum + (c.storyPoints ?? 0), 0);
+    const completedPoints = completedCards.reduce((sum: number, c: any) => sum + (c.storyPoints ?? 0), 0);
 
     const now = new Date();
     const elapsed = Math.min(
@@ -331,10 +331,10 @@ export class SprintsService {
       },
     });
 
-    const velocities = completedSprints.map((s) => s.velocity ?? 0);
+    const velocities = completedSprints.map((s: any) => s.velocity ?? 0);
     const avgVelocity =
       velocities.length > 0
-        ? Math.round(velocities.reduce((a, b) => a + b, 0) / velocities.length)
+        ? Math.round(velocities.reduce((a: number, b: number) => a + b, 0) / velocities.length)
         : 0;
 
     return { sprints: completedSprints, avgVelocity };

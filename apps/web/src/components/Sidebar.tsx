@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../lib/auth-store';
 import { useThemeStore, type ThemeMode } from '../lib/theme-store';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
-const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
+const THEME_OPTIONS: { value: ThemeMode; labelKey: string }[] = [
+  { value: 'light', labelKey: 'theme.light' },
+  { value: 'dark', labelKey: 'theme.dark' },
+  { value: 'system', labelKey: 'theme.system' },
 ];
 
 function SunIcon() {
@@ -41,6 +43,7 @@ function ThemeIcon({ mode }: { mode: ThemeMode }) {
 }
 
 export function Sidebar() {
+  const { t } = useTranslation('common');
   const dbUser = useAuthStore((s) => s.dbUser);
   const { mode, setMode } = useThemeStore();
   const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -69,7 +72,7 @@ export function Sidebar() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
           </svg>
-          Dashboard
+          {t('nav.dashboard')}
         </NavLink>
 
         <NavLink
@@ -79,7 +82,7 @@ export function Sidebar() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
           </svg>
-          Profile
+          {t('nav.profile')}
         </NavLink>
 
         <NavLink
@@ -89,7 +92,7 @@ export function Sidebar() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" />
           </svg>
-          Pricing
+          {t('nav.pricing')}
         </NavLink>
 
         {dbUser?.role === 'ADMIN' && (
@@ -100,19 +103,25 @@ export function Sidebar() {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
-            Admin
+            {t('nav.admin')}
           </NavLink>
         )}
       </nav>
+
+      {/* Language Switcher */}
+      <div className="px-2 mb-1">
+        <LanguageSwitcher />
+      </div>
 
       {/* Theme Toggle */}
       <div className="relative px-2 mb-2" data-dropdown>
         <button
           className="w-full flex items-center gap-[10px] py-[8px] px-[12px] rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/10 hover:text-text-primary transition-colors duration-[120ms]"
           onClick={() => setShowThemeMenu(!showThemeMenu)}
+          aria-label={t('theme.light')}
         >
           <ThemeIcon mode={mode} />
-          <span className="flex-1 text-left capitalize">{mode} mode</span>
+          <span className="flex-1 text-left capitalize">{t(`theme.${mode}`)} mode</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
         </button>
 
@@ -129,7 +138,7 @@ export function Sidebar() {
                 onClick={() => { setMode(opt.value); setShowThemeMenu(false); }}
               >
                 <ThemeIcon mode={opt.value} />
-                {opt.label}
+                {t(opt.labelKey)}
                 {opt.value === 'system' && (
                   <span className="text-[0.65rem] text-text-muted ml-auto">auto by time</span>
                 )}
@@ -153,7 +162,7 @@ export function Sidebar() {
           }}
         />
         <div className="flex-1 min-w-0 flex flex-col">
-          <span className="text-[0.8rem] font-medium text-text-primary truncate">{dbUser?.name ?? 'Loading...'}</span>
+          <span className="text-[0.8rem] font-medium text-text-primary truncate">{dbUser?.name ?? t('actions.loading')}</span>
           <span className="text-[0.7rem] text-text-muted truncate">{dbUser?.email ?? ''}</span>
         </div>
       </div>

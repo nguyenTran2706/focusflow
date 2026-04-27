@@ -1,0 +1,19 @@
+{
+  "title": "Whiteboard",
+  "loading": "Loading whiteboard...",
+  "toolbar": {
+    "backToWhiteboards": "Back to whiteboards",
+    "exportPng": "Export PNG",
+    "save": "Save",
+    "saveShortcut": "Save whiteboard (Ctrl+S)"
+  },
+  "list": {
+    "title": "Whiteboards",
+    "empty": "No whiteboards yet",
+    "emptyDescription": "Create your first whiteboard to start sketching ideas.",
+    "create": "New Whiteboard",
+    "search": "Search whiteboards...",
+    "lastEdited": "Last edited {{time}}",
+    "confirmDelete": "Delete this whiteboard? This cannot be undone."
+  }
+}

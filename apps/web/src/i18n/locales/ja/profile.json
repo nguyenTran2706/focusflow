@@ -1,0 +1,38 @@
+{
+  "title": "プロフィール",
+  "editProfile": "プロフィールを編集",
+  "saveChanges": "変更を保存",
+  "personalInfo": {
+    "title": "個人情報",
+    "fullName": "氏名",
+    "email": "メール",
+    "phone": "電話番号",
+    "accountCreated": "アカウント作成日",
+    "managedByClerk": "Clerkで管理"
+  },
+  "address": {
+    "title": "住所",
+    "street": "番地",
+    "city": "市区町村",
+    "state": "都道府県",
+    "postal": "郵便番号",
+    "country": "国"
+  },
+  "subscription": {
+    "title": "サブスクリプション",
+    "plan": "{{plan}}プラン",
+    "free": "制限付き機能の基本アクセス",
+    "pro": "優先サポート付き全機能アクセス",
+    "proMax": "Proのすべてと専用サポート",
+    "upgrade": "アップグレード",
+    "manage": "管理"
+  },
+  "messages": {
+    "updateSuccess": "プロフィールが更新されました",
+    "updateFailed": "プロフィールの更新に失敗しました"
+  },
+  "language": {
+    "title": "言語と地域",
+    "preferred": "優先言語"
+  }
+}

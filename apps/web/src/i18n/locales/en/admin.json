@@ -1,0 +1,22 @@
+{
+  "title": "Admin Panel",
+  "users": {
+    "title": "Users",
+    "search": "Search users...",
+    "email": "Email",
+    "name": "Name",
+    "role": "Role",
+    "subscription": "Subscription",
+    "createdAt": "Created",
+    "actions": "Actions",
+    "noUsers": "No users found",
+    "changeRole": "Change Role",
+    "changePlan": "Change Plan"
+  },
+  "stats": {
+    "totalUsers": "Total Users",
+    "proUsers": "Pro Users",
+    "totalWorkspaces": "Total Workspaces",
+    "totalBoards": "Total Boards"
+  }
+}

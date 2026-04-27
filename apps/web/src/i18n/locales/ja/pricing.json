@@ -1,0 +1,54 @@
+{
+  "title": "料金プラン",
+  "heading": "プランを選択",
+  "subtitle": "無料で始めて、チームの成長に合わせてスケールアップ。いつでもアップグレード可能です。",
+  "footer": "すべてのプランに14日間の無料トライアルが含まれます。いつでもキャンセル可能。価格はUSD表示。",
+  "plans": {
+    "free": {
+      "name": "無料",
+      "price": "$0",
+      "period": "永久",
+      "description": "始めるのに最適"
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "$12",
+      "period": "/月",
+      "description": "より多くを求めるプロ向け"
+    },
+    "proMax": {
+      "name": "Pro Max",
+      "price": "$29",
+      "period": "/月",
+      "description": "すべて無制限"
+    }
+  },
+  "features": {
+    "workspaces3": "ワークスペース3個",
+    "boards5": "ワークスペースごとにボード5個",
+    "basicKanban": "基本カンバンボード",
+    "emailSupport": "メールサポート",
+    "unlimitedWorkspaces": "無制限ワークスペース",
+    "unlimitedBoards": "無制限ボード",
+    "aiTaskBreakdown": "AIタスク分解",
+    "realtimeCollab": "リアルタイムコラボレーション",
+    "prioritySupport": "優先サポート",
+    "customLabels": "カスタムラベル・フィールド",
+    "advancedAnalytics": "高度な分析",
+    "everythingInPro": "Proのすべて",
+    "analyticsDashboard": "高度な分析ダッシュボード",
+    "dedicatedSupport": "専用サポートチャンネル",
+    "customIntegrations": "カスタム連携",
+    "teamManagement": "チーム管理ツール",
+    "auditLogs": "監査ログ"
+  },
+  "badges": {
+    "mostPopular": "最も人気",
+    "currentPlan": "現在のプラン"
+  },
+  "cta": {
+    "upgrade": "{{plan}}にアップグレード",
+    "manageSubscription": "サブスクリプションを管理",
+    "redirecting": "リダイレクト中…"
+  }
+}

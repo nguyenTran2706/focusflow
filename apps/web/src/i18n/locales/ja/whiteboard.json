@@ -1,0 +1,19 @@
+{
+  "title": "ホワイトボード",
+  "loading": "ホワイトボードを読み込み中...",
+  "toolbar": {
+    "backToWhiteboards": "ホワイトボード一覧へ",
+    "exportPng": "PNGエクスポート",
+    "save": "保存",
+    "saveShortcut": "ホワイトボードを保存 (Ctrl+S)"
+  },
+  "list": {
+    "title": "ホワイトボード",
+    "empty": "ホワイトボードがありません",
+    "emptyDescription": "最初のホワイトボードを作成して、アイデアをスケッチしましょう。",
+    "create": "新しいホワイトボード",
+    "search": "ホワイトボードを検索...",
+    "lastEdited": "最終編集 {{time}}",
+    "confirmDelete": "このホワイトボードを削除しますか？取り消せません。"
+  }
+}

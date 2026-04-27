@@ -1,0 +1,22 @@
+{
+  "title": "管理パネル",
+  "users": {
+    "title": "ユーザー",
+    "search": "ユーザーを検索...",
+    "email": "メール",
+    "name": "名前",
+    "role": "役割",
+    "subscription": "サブスクリプション",
+    "createdAt": "作成日",
+    "actions": "操作",
+    "noUsers": "ユーザーが見つかりません",
+    "changeRole": "役割を変更",
+    "changePlan": "プランを変更"
+  },
+  "stats": {
+    "totalUsers": "ユーザー合計",
+    "proUsers": "Proユーザー",
+    "totalWorkspaces": "ワークスペース合計",
+    "totalBoards": "ボード合計"
+  }
+}

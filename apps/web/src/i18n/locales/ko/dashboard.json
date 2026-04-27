@@ -1,0 +1,35 @@
+{
+  "title": "대시보드",
+  "greeting": {
+    "morning": "좋은 아침입니다",
+    "afternoon": "좋은 오후입니다",
+    "evening": "좋은 저녁입니다"
+  },
+  "subtitle": "{{count}}/{{limit}} 워크스페이스 · {{plan}} 요금제",
+  "subtitleNoLimit": "워크스페이스 {{count}}개",
+  "subtitleNoLimit_other": "워크스페이스 {{count}}개",
+  "whatsHappening": "워크스페이스 전반의 현황입니다.",
+  "stats": {
+    "totalBoards": "전체 보드",
+    "totalCards": "전체 카드",
+    "completed7d": "완료 (7일)",
+    "dueSoon": "마감 임박"
+  },
+  "workspaces": {
+    "title": "내 워크스페이스",
+    "empty": "워크스페이스가 없습니다",
+    "emptyDescription": "첫 번째 워크스페이스를 만들어 칸반 보드로 프로젝트를 관리하세요.",
+    "create": "워크스페이스 만들기",
+    "new": "새 워크스페이스",
+    "limitReached": "워크스페이스 한도 도달",
+    "upgradePlan": "요금제 업그레이드"
+  },
+  "createModal": {
+    "title": "워크스페이스 만들기",
+    "nameLabel": "워크스페이스 이름",
+    "namePlaceholder": "내 팀",
+    "slugLabel": "URL 슬러그",
+    "slugPlaceholder": "my-team",
+    "submit": "워크스페이스 만들기"
+  }
+}

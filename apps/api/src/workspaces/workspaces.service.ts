@@ -91,7 +91,7 @@ export class WorkspacesService {
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
-    const isMember = workspace.memberships.some((m) => m.userId === userId);
+    const isMember = workspace.memberships.some((m: any) => m.userId === userId);
     if (!isMember) {
       throw new ForbiddenException('Not a member of this workspace');
     }
@@ -103,7 +103,7 @@ export class WorkspacesService {
   async update(workspaceId: string, dto: UpdateWorkspaceDto, userId: string) {
     const workspace = await this.findOneOrFail(workspaceId, userId);
     // Only OWNER or ADMIN can update
-    const membership = workspace.memberships.find((m) => m.userId === userId);
+    const membership = workspace.memberships.find((m: any) => m.userId === userId);
     if (!membership || membership.role === 'MEMBER') {
       throw new ForbiddenException('Only admins or owners can update workspaces');
     }
@@ -121,7 +121,7 @@ export class WorkspacesService {
   async delete(workspaceId: string, userId: string) {
     const workspace = await this.findOneOrFail(workspaceId, userId);
     // Only OWNER can delete
-    const membership = workspace.memberships.find((m) => m.userId === userId);
+    const membership = workspace.memberships.find((m: any) => m.userId === userId);
     if (!membership || membership.role !== 'OWNER') {
       throw new ForbiddenException('Only the owner can delete a workspace');
     }
@@ -138,7 +138,7 @@ export class WorkspacesService {
       include: { user: { select: { id: true, name: true, email: true } } },
       orderBy: { createdAt: 'asc' },
     });
-    return memberships.map((m) => ({
+    return memberships.map((m: any) => ({
       id: m.user.id,
       name: m.user.name,
       email: m.user.email,
@@ -171,9 +171,9 @@ export class WorkspacesService {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const allCards = boards.flatMap((b) =>
-      b.columns.flatMap((col) =>
-        col.cards.map((card) => ({ ...card, columnName: col.name })),
+    const allCards = boards.flatMap((b: any) =>
+      b.columns.flatMap((col: any) =>
+        col.cards.map((card: any) => ({ ...card, columnName: col.name })),
       ),
     );
 
@@ -206,9 +206,9 @@ export class WorkspacesService {
     }
 
     const recentActivity = allCards
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 10)
-      .map((c) => ({
+      .map((c: any) => ({
         cardId: c.id,
         title: c.title,
         columnName: c.columnName,

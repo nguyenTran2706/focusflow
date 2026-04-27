@@ -1,0 +1,22 @@
+{
+  "title": "管理面板",
+  "users": {
+    "title": "用户",
+    "search": "搜索用户...",
+    "email": "邮箱",
+    "name": "姓名",
+    "role": "角色",
+    "subscription": "订阅",
+    "createdAt": "创建时间",
+    "actions": "操作",
+    "noUsers": "未找到用户",
+    "changeRole": "更改角色",
+    "changePlan": "更改方案"
+  },
+  "stats": {
+    "totalUsers": "用户总数",
+    "proUsers": "Pro 用户",
+    "totalWorkspaces": "工作区总数",
+    "totalBoards": "看板总数"
+  }
+}

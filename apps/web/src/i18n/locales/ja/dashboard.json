@@ -1,0 +1,35 @@
+{
+  "title": "ダッシュボード",
+  "greeting": {
+    "morning": "おはようございます",
+    "afternoon": "こんにちは",
+    "evening": "こんばんは"
+  },
+  "subtitle": "{{count}}/{{limit}} ワークスペース · {{plan}}プラン",
+  "subtitleNoLimit": "{{count}}個のワークスペース",
+  "subtitleNoLimit_other": "{{count}}個のワークスペース",
+  "whatsHappening": "ワークスペース全体の状況です。",
+  "stats": {
+    "totalBoards": "ボード合計",
+    "totalCards": "カード合計",
+    "completed7d": "完了（7日間）",
+    "dueSoon": "期限間近"
+  },
+  "workspaces": {
+    "title": "ワークスペース",
+    "empty": "ワークスペースがありません",
+    "emptyDescription": "最初のワークスペースを作成して、カンバンボードでプロジェクトを管理しましょう。",
+    "create": "ワークスペースを作成",
+    "new": "新しいワークスペース",
+    "limitReached": "ワークスペース上限に達しました",
+    "upgradePlan": "プランをアップグレード"
+  },
+  "createModal": {
+    "title": "ワークスペースを作成",
+    "nameLabel": "ワークスペース名",
+    "namePlaceholder": "マイチーム",
+    "slugLabel": "URLスラッグ",
+    "slugPlaceholder": "my-team",
+    "submit": "ワークスペースを作成"
+  }
+}

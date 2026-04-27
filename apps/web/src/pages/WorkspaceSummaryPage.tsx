@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -68,22 +69,25 @@ function formatTimeAgo(iso: string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 // ── Component ───────────────────────────────────────────────────────────────
 
 export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
+  const { t } = useTranslation('board');
   const [data, setData] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!workspaceId) return;
-    setLoading(true);
+    let cancelled = false;
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
     api.get<SummaryData>(`/workspaces/${workspaceId}/summary`)
-      .then(setData)
+      .then((d) => { if (!cancelled) setData(d); })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [workspaceId]);
 
   if (loading) {
@@ -106,7 +110,7 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-16 px-8 gap-3 animate-fade-in">
-        <p className="text-text-muted">Unable to load summary</p>
+        <p className="text-text-muted">{t('summary.unableToLoad')}</p>
       </div>
     );
   }
@@ -134,10 +138,10 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
   const totalType = typeEntries.reduce((sum, [, c]) => sum + c, 0);
 
   const statCards = [
-    { label: 'Completed (7d)', value: data.completedRecently, gradient: 'from-emerald-500/10 to-emerald-500/5' },
-    { label: 'Updated (7d)', value: data.updatedRecently, gradient: 'from-amber-500/10 to-amber-500/5' },
-    { label: 'Created (7d)', value: data.createdRecently, gradient: 'from-blue-500/10 to-blue-500/5' },
-    { label: 'Due Soon', value: data.dueSoon, gradient: 'from-red-500/10 to-red-500/5' },
+    { label: t('summary.completed7d'), value: data.completedRecently, gradient: 'from-emerald-500/10 to-emerald-500/5' },
+    { label: t('summary.updated7d'), value: data.updatedRecently, gradient: 'from-amber-500/10 to-amber-500/5' },
+    { label: t('summary.created7d'), value: data.createdRecently, gradient: 'from-blue-500/10 to-blue-500/5' },
+    { label: t('summary.dueSoon'), value: data.dueSoon, gradient: 'from-red-500/10 to-red-500/5' },
   ];
 
   return (
@@ -148,7 +152,7 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
           <div key={i} className={`rounded-xl bg-gradient-to-br ${s.gradient} border border-border-subtle p-5 flex flex-col gap-2 transition-all hover:-translate-y-0.5 hover:shadow-lg`}>
             <span className="text-[0.75rem] font-semibold text-text-muted uppercase tracking-wide">{s.label}</span>
             <span className="text-[1.8rem] font-bold text-text-primary leading-none">{s.value}</span>
-            <span className="text-[0.7rem] text-text-muted">of {data.totalCards} total cards</span>
+            <span className="text-[0.7rem] text-text-muted">{t('summary.ofTotalCards', { count: data.totalCards })}</span>
           </div>
         ))}
       </div>
@@ -159,7 +163,7 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
         <div className="rounded-xl bg-bg-card border border-border-subtle p-5">
           <h3 className="text-[0.85rem] font-semibold text-text-primary mb-5 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
-            Status Overview
+            {t('summary.statusOverview')}
           </h3>
           <div className="flex items-center gap-6">
             {/* Donut */}
@@ -170,7 +174,7 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
               />
               <div className="absolute inset-[25%] rounded-full bg-bg-card flex items-center justify-center flex-col">
                 <span className="text-[1.4rem] font-bold text-text-primary leading-none">{totalStatus}</span>
-                <span className="text-[0.6rem] text-text-muted mt-0.5">total</span>
+                <span className="text-[0.6rem] text-text-muted mt-0.5">{t('summary.total')}</span>
               </div>
             </div>
             {/* Legend */}
@@ -190,11 +194,11 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
         <div className="rounded-xl bg-bg-card border border-border-subtle p-5">
           <h3 className="text-[0.85rem] font-semibold text-text-primary mb-4 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M1 4v6h6" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
-            Recent Activity
+            {t('summary.recentActivity')}
           </h3>
           <div className="flex flex-col gap-1 max-h-[220px] overflow-y-auto pr-1">
             {data.recentActivity.length === 0 ? (
-              <p className="text-[0.8rem] text-text-muted italic py-4 text-center">No recent activity</p>
+              <p className="text-[0.8rem] text-text-muted italic py-4 text-center">{t('summary.noRecentActivity')}</p>
             ) : (
               data.recentActivity.map((item) => (
                 <div key={item.cardId} className="flex items-start gap-2.5 py-2 px-2 rounded-md hover:bg-white/[0.12] transition-colors">
@@ -221,11 +225,11 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
         <div className="rounded-xl bg-bg-card border border-border-subtle p-5">
           <h3 className="text-[0.85rem] font-semibold text-text-primary mb-4 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
-            Priority Breakdown
+            {t('summary.priorityBreakdown')}
           </h3>
           <div className="flex flex-col gap-3">
             {priorityEntries.length === 0 ? (
-              <p className="text-[0.8rem] text-text-muted italic py-4 text-center">No cards yet</p>
+              <p className="text-[0.8rem] text-text-muted italic py-4 text-center">{t('summary.noCardsYet')}</p>
             ) : (
               priorityEntries.map(([priority, count]) => {
                 const pct = totalPriority > 0 ? (count / totalPriority) * 100 : 0;
@@ -250,11 +254,11 @@ export function WorkspaceSummaryPage({ workspaceId }: { workspaceId: string }) {
         <div className="rounded-xl bg-bg-card border border-border-subtle p-5">
           <h3 className="text-[0.85rem] font-semibold text-text-primary mb-4 flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M9 12l2 2 4-4" /></svg>
-            Types of Work
+            {t('summary.typesOfWork')}
           </h3>
           <div className="flex flex-col gap-3">
             {typeEntries.length === 0 ? (
-              <p className="text-[0.8rem] text-text-muted italic py-4 text-center">No cards yet</p>
+              <p className="text-[0.8rem] text-text-muted italic py-4 text-center">{t('summary.noCardsYet')}</p>
             ) : (
               typeEntries.map(([type, count]) => {
                 const pct = totalType > 0 ? (count / totalType) * 100 : 0;

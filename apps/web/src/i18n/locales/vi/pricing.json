@@ -1,0 +1,7 @@
+{
+  "title": "Bảng giá", "heading": "Chọn gói của bạn", "subtitle": "Bắt đầu miễn phí và mở rộng khi nhóm phát triển. Nâng cấp bất cứ lúc nào.", "footer": "Tất cả các gói đều bao gồm 14 ngày dùng thử miễn phí. Hủy bất cứ lúc nào. Giá tính bằng USD.",
+  "plans": { "free": { "name": "Miễn phí", "price": "$0", "period": "mãi mãi", "description": "Phù hợp để bắt đầu" }, "pro": { "name": "Pro", "price": "$12", "period": "/tháng", "description": "Dành cho chuyên gia cần nhiều hơn" }, "proMax": { "name": "Pro Max", "price": "$29", "period": "/tháng", "description": "Mọi thứ, không giới hạn" } },
+  "features": { "workspaces3": "3 workspace", "boards5": "5 boards mỗi workspace", "basicKanban": "Kanban board cơ bản", "emailSupport": "Hỗ trợ qua email", "unlimitedWorkspaces": "Workspace không giới hạn", "unlimitedBoards": "Boards không giới hạn", "aiTaskBreakdown": "Phân tích công việc bằng AI", "realtimeCollab": "Cộng tác thời gian thực", "prioritySupport": "Hỗ trợ ưu tiên", "customLabels": "Nhãn và trường tùy chỉnh", "advancedAnalytics": "Phân tích nâng cao", "everythingInPro": "Mọi thứ trong Pro", "analyticsDashboard": "Bảng phân tích nâng cao", "dedicatedSupport": "Kênh hỗ trợ riêng", "customIntegrations": "Tích hợp tùy chỉnh", "teamManagement": "Công cụ quản lý nhóm", "auditLogs": "Nhật ký kiểm tra" },
+  "badges": { "mostPopular": "Phổ biến nhất", "currentPlan": "Gói hiện tại" },
+  "cta": { "upgrade": "Nâng cấp lên {{plan}}", "manageSubscription": "Quản lý đăng ký", "redirecting": "Đang chuyển hướng…" }
+}

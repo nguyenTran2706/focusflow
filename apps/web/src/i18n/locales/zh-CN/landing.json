@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "badge": "现在有了人工智能驱动的任务分解",
+    "titleLine1": "管理项目",
+    "titleLine2": "清晰度和速度",
+    "subtitle": "FocusFlow 将看板、Scrum 冲刺、白板、图表和 AI 整合到一个漂亮的工作区中，以便您的团队可以更快地交付。",
+    "cta": "免费开始 — 无需信用卡"
+  },
+  "features": {
+    "heading": "您运送所需的一切",
+    "subtitle": "从构思到交付——您的团队所需的所有工具都集中在一个地方。",
+    "kanban": {
+      "title": "Kanban Boards",
+      "description": "通过拖放卡片、列和实时更新以可视化方式组织工作。"
+    },
+    "scrum": {
+      "title": "Scrum 和 Sprint",
+      "description": "使用内置 Scrum 工具规划冲刺、跟踪速度并管理积压工作。"
+    },
+    "whiteboards": {
+      "title": "Whiteboards",
+      "description": "使用协作式无限画布白板勾勒想法并集思广益。"
+    },
+    "diagrams": {
+      "title": "Diagrams",
+      "description": "使用 React Flow 创建流程图、架构图和用户流。"
+    },
+    "ai": {
+      "title": "人工智能聊天助手",
+      "description": "通过人工智能支持的聊天来分解任务、获取建议并加快规划速度。"
+    },
+    "collaboration": {
+      "title": "Team Collaboration",
+      "description": "邀请成员、分配任务并跨工作区实时协作。"
+    }
+  },
+  "cta": {
+    "heading": "准备好集中注意力了吗？",
+    "subtitle": "加入使用 FocusFlow 更快交付的团队。 免费开始，准备好后升级。",
+    "button": "创建免费帐户"
+  },
+  "kanbanDemo": {
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  }
+}

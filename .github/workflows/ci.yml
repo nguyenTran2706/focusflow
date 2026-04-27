@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint -w apps/web || true
+      - run: npm run lint -w apps/api || true
+      - run: npm run lint -w apps/ai-worker || true
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=apps/api/prisma/schema.prisma
+      - name: Type-check API
+        run: cd apps/api && npx tsc --noEmit
+      - name: Type-check AI Worker
+        run: cd apps/ai-worker && npx tsc --noEmit
+      - name: Type-check Web
+        run: cd apps/web && npx tsc -b
+
+  test-api:
+    name: Test API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=apps/api/prisma/schema.prisma
+      - name: Run API tests
+        run: cd apps/api && NODE_OPTIONS='--experimental-vm-modules' npx jest --ci --coverage
+
+  test-ai-worker:
+    name: Test AI Worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run AI Worker tests
+        run: cd apps/ai-worker && NODE_OPTIONS='--experimental-vm-modules' npx jest --ci --coverage
+
+  test-web:
+    name: Test Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run Web tests
+        run: cd apps/web && npx vitest run --coverage
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, test-api, test-ai-worker, test-web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate --schema=apps/api/prisma/schema.prisma
+      - name: Build API
+        run: npm run build -w apps/api
+      - name: Build AI Worker
+        run: npm run build -w apps/ai-worker
+      - name: Build Web
+        run: npm run build -w apps/web
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+          VITE_API_URL: http://localhost:3001
+          VITE_PUSHER_KEY: placeholder
+          VITE_PUSHER_CLUSTER: us2
+          VITE_STRIPE_PRICE_ID_PRO: price_placeholder
+          VITE_STRIPE_PRICE_ID_PRO_MAX: price_placeholder

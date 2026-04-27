@@ -1,0 +1,38 @@
+{
+  "title": "个人资料",
+  "editProfile": "编辑资料",
+  "saveChanges": "保存更改",
+  "personalInfo": {
+    "title": "个人信息",
+    "fullName": "姓名",
+    "email": "邮箱",
+    "phone": "电话",
+    "accountCreated": "账户创建时间",
+    "managedByClerk": "由 Clerk 管理"
+  },
+  "address": {
+    "title": "地址",
+    "street": "街道地址",
+    "city": "城市",
+    "state": "省/州",
+    "postal": "邮政编码",
+    "country": "国家"
+  },
+  "subscription": {
+    "title": "订阅",
+    "plan": "{{plan}} 方案",
+    "free": "有限功能的基本访问",
+    "pro": "优先支持的完整功能访问",
+    "proMax": "Pro 的所有功能加专属支持",
+    "upgrade": "升级",
+    "manage": "管理"
+  },
+  "messages": {
+    "updateSuccess": "个人资料更新成功",
+    "updateFailed": "个人资料更新失败"
+  },
+  "language": {
+    "title": "语言和地区",
+    "preferred": "首选语言"
+  }
+}

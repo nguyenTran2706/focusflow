@@ -1,0 +1,17 @@
+{
+  "generic": "Something went wrong. Please try again.",
+  "network": "Network error. Check your connection.",
+  "unauthorized": "You are not authorized. Please sign in.",
+  "forbidden": "You don't have permission to do this.",
+  "notFound": "The requested resource was not found.",
+  "serverError": "Server error. Please try again later.",
+  "INVALID_CREDENTIALS": "Invalid email or password.",
+  "EMAIL_TAKEN": "This email is already registered.",
+  "WORKSPACE_LIMIT": "You've reached your workspace limit. Upgrade to create more.",
+  "BOARD_LIMIT": "You've reached your board limit for this workspace.",
+  "RATE_LIMITED": "Too many requests. Please wait a moment.",
+  "SAVE_FAILED": "Failed to save. Your changes are preserved locally.",
+  "DELETE_FAILED": "Failed to delete. Please try again.",
+  "INVITE_FAILED": "Failed to send invitation.",
+  "EXPORT_FAILED": "Export failed. Please try again."
+}

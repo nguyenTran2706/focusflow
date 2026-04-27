@@ -1,0 +1,5 @@
+{
+  "title": "Quản trị",
+  "users": { "title": "Người dùng", "search": "Tìm người dùng...", "email": "Email", "name": "Tên", "role": "Vai trò", "subscription": "Gói đăng ký", "createdAt": "Ngày tạo", "actions": "Hành động", "noUsers": "Không tìm thấy người dùng", "changeRole": "Đổi vai trò", "changePlan": "Đổi gói" },
+  "stats": { "totalUsers": "Tổng người dùng", "proUsers": "Người dùng Pro", "totalWorkspaces": "Tổng workspace", "totalBoards": "Tổng boards" }
+}

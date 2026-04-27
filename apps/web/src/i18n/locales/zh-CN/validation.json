@@ -1,0 +1,14 @@
+{
+  "required": "此字段为必填。",
+  "email": "请输入有效的邮箱地址。",
+  "minLength": "至少需要 {{min}} 个字符。",
+  "maxLength": "最多 {{max}} 个字符。",
+  "slug": "只允许小写字母、数字和连字符。",
+  "url": "请输入有效的 URL。",
+  "number": "请输入有效的数字。",
+  "positive": "必须是正数。",
+  "passwordMin": "密码至少需要 8 个字符。",
+  "passwordMatch": "密码不匹配。",
+  "nameRequired": "姓名为必填。",
+  "slugRequired": "URL 标识为必填。"
+}

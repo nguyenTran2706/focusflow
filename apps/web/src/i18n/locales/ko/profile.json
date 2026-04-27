@@ -1,0 +1,38 @@
+{
+  "title": "프로필",
+  "editProfile": "프로필 편집",
+  "saveChanges": "변경 사항 저장",
+  "personalInfo": {
+    "title": "개인 정보",
+    "fullName": "이름",
+    "email": "이메일",
+    "phone": "전화번호",
+    "accountCreated": "계정 생성일",
+    "managedByClerk": "Clerk에서 관리"
+  },
+  "address": {
+    "title": "주소",
+    "street": "도로명 주소",
+    "city": "시/군/구",
+    "state": "도/광역시",
+    "postal": "우편번호",
+    "country": "국가"
+  },
+  "subscription": {
+    "title": "구독",
+    "plan": "{{plan}} 요금제",
+    "free": "제한된 기능의 기본 액세스",
+    "pro": "우선 지원과 함께 전체 기능 액세스",
+    "proMax": "Pro의 모든 것과 전담 지원",
+    "upgrade": "업그레이드",
+    "manage": "관리"
+  },
+  "messages": {
+    "updateSuccess": "프로필이 업데이트되었습니다",
+    "updateFailed": "프로필 업데이트 실패"
+  },
+  "language": {
+    "title": "언어 및 지역",
+    "preferred": "선호 언어"
+  }
+}

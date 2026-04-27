@@ -1,0 +1,36 @@
+{
+  "title": "スクラムボード",
+  "sprint": {
+    "planning": "スプリント計画",
+    "active": "アクティブスプリント",
+    "completed": "完了",
+    "noActive": "アクティブなスプリントはありません",
+    "create": "スプリントを作成",
+    "start": "スプリントを開始",
+    "complete": "スプリントを完了",
+    "name": "スプリント名",
+    "goal": "スプリント目標",
+    "startDate": "開始日",
+    "endDate": "終了日",
+    "duration": "期間",
+    "days": "{{count}}日"
+  },
+  "backlog": {
+    "title": "バックログ",
+    "empty": "バックログは空です",
+    "moveToSprint": "スプリントに移動",
+    "storyPoints": "ストーリーポイント"
+  },
+  "velocity": {
+    "title": "ベロシティチャート",
+    "planned": "計画",
+    "completed": "完了",
+    "average": "平均ベロシティ"
+  },
+  "burndown": {
+    "title": "バーンダウンチャート",
+    "ideal": "理想",
+    "actual": "実績",
+    "remaining": "残り"
+  }
+}

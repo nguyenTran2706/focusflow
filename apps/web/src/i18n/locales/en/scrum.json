@@ -1,0 +1,36 @@
+{
+  "title": "Scrum Board",
+  "sprint": {
+    "planning": "Sprint Planning",
+    "active": "Active Sprint",
+    "completed": "Completed",
+    "noActive": "No active sprint",
+    "create": "Create Sprint",
+    "start": "Start Sprint",
+    "complete": "Complete Sprint",
+    "name": "Sprint Name",
+    "goal": "Sprint Goal",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "duration": "Duration",
+    "days": "{{count}} days"
+  },
+  "backlog": {
+    "title": "Backlog",
+    "empty": "Backlog is empty",
+    "moveToSprint": "Move to Sprint",
+    "storyPoints": "Story Points"
+  },
+  "velocity": {
+    "title": "Velocity Chart",
+    "planned": "Planned",
+    "completed": "Completed",
+    "average": "Average Velocity"
+  },
+  "burndown": {
+    "title": "Burndown Chart",
+    "ideal": "Ideal",
+    "actual": "Actual",
+    "remaining": "Remaining"
+  }
+}

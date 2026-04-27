@@ -1,0 +1,17 @@
+{
+  "generic": "出了点问题，请重试。",
+  "network": "网络错误，请检查您的连接。",
+  "unauthorized": "未授权，请登录。",
+  "forbidden": "您没有执行此操作的权限。",
+  "notFound": "未找到请求的资源。",
+  "serverError": "服务器错误，请稍后重试。",
+  "INVALID_CREDENTIALS": "邮箱或密码不正确。",
+  "EMAIL_TAKEN": "此邮箱已注册。",
+  "WORKSPACE_LIMIT": "已达到工作区上限，请升级以创建更多。",
+  "BOARD_LIMIT": "已达到此工作区的看板上限。",
+  "RATE_LIMITED": "请求过多，请稍候。",
+  "SAVE_FAILED": "保存失败，您的更改已保存在本地。",
+  "DELETE_FAILED": "删除失败，请重试。",
+  "INVITE_FAILED": "邀请发送失败。",
+  "EXPORT_FAILED": "导出失败，请重试。"
+}

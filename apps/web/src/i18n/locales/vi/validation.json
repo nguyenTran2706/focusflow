@@ -1,0 +1,14 @@
+{
+  "required": "Trường này là bắt buộc.",
+  "email": "Vui lòng nhập email hợp lệ.",
+  "minLength": "Phải có ít nhất {{min}} ký tự.",
+  "maxLength": "Tối đa {{max}} ký tự.",
+  "slug": "Chỉ chấp nhận chữ thường, số và dấu gạch ngang.",
+  "url": "Vui lòng nhập URL hợp lệ.",
+  "number": "Vui lòng nhập số hợp lệ.",
+  "positive": "Phải là số dương.",
+  "passwordMin": "Mật khẩu phải có ít nhất 8 ký tự.",
+  "passwordMatch": "Mật khẩu không khớp.",
+  "nameRequired": "Tên là bắt buộc.",
+  "slugRequired": "Đường dẫn URL là bắt buộc."
+}

@@ -1,0 +1,19 @@
+{
+  "title": "白板",
+  "loading": "加载白板中...",
+  "toolbar": {
+    "backToWhiteboards": "返回白板列表",
+    "exportPng": "导出 PNG",
+    "save": "保存",
+    "saveShortcut": "保存白板 (Ctrl+S)"
+  },
+  "list": {
+    "title": "白板",
+    "empty": "还没有白板",
+    "emptyDescription": "创建您的第一个白板，开始草绘想法。",
+    "create": "新建白板",
+    "search": "搜索白板...",
+    "lastEdited": "最后编辑于 {{time}}",
+    "confirmDelete": "删除此白板？此操作无法撤销。"
+  }
+}

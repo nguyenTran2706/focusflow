@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "badge": "AI を活用したタスクのブレークダウンが可能になりました",
+    "titleLine1": "プロジェクトを管理する",
+    "titleLine2": "明瞭さとスピード",
+    "subtitle": "FocusFlow は、カンバン ボード、スクラム スプリント、ホワイトボード、図、AI を 1 つの美しいワークスペースにまとめて、チームがより迅速に出荷できるようにします。",
+    "cta": "無料で始められる - クレジット カードは不要"
+  },
+  "features": {
+    "heading": "発送に必要なものすべて",
+    "subtitle": "アイデアの立案から提供まで、チームに必要なすべてのツールが 1 か所にあります。",
+    "kanban": {
+      "title": "Kanban Boards",
+      "description": "ドラッグ アンド ドロップのカード、列、リアルタイム更新により、作業を視覚的に整理します。"
+    },
+    "scrum": {
+      "title": "スクラムとスプリント",
+      "description": "組み込みのスクラム ツールを使用して、スプリントを計画し、ベロシティを追跡し、バックログを管理します。"
+    },
+    "whiteboards": {
+      "title": "Whiteboards",
+      "description": "共同作業可能な無限キャンバス ホワイトボードを使用してアイデアをスケッチし、ブレインストーミングを行います。"
+    },
+    "diagrams": {
+      "title": "Diagrams",
+      "description": "React Flow を使用してフローチャート、アーキテクチャ図、ユーザー フローを作成します。"
+    },
+    "ai": {
+      "title": "AIチャットアシスタント",
+      "description": "AI を活用したチャットでタスクを細分化し、提案を取得し、計画をスピードアップします。"
+    },
+    "collaboration": {
+      "title": "Team Collaboration",
+      "description": "メンバーを招待し、タスクを割り当て、ワークスペース間でリアルタイムに共同作業します。"
+    }
+  },
+  "cta": {
+    "heading": "集中する準備はできていますか?",
+    "subtitle": "FocusFlow を使用してより迅速に出荷するチームに参加しましょう。 無料で始めて、準備ができたらアップグレードしてください。",
+    "button": "無料アカウントを作成する"
+  },
+  "kanbanDemo": {
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "review": "Review",
+    "done": "Done"
+  }
+}

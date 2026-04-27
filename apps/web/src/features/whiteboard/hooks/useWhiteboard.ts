@@ -10,8 +10,11 @@ export interface WhiteboardSummary {
   updatedAt: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ExcalidrawScene { elements?: any[]; appState?: Record<string, any>; files?: Record<string, any> }
+
 export interface WhiteboardFull extends WhiteboardSummary {
-  scene: any;
+  scene: ExcalidrawScene | null;
 }
 
 export function useWhiteboards(boardId: string | undefined) {
@@ -42,9 +45,11 @@ export function useCreateWhiteboard(boardId: string | undefined) {
 export function useUpdateWhiteboard(id: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name?: string; scene?: any }) =>
+    mutationFn: (data: { name?: string; scene?: ExcalidrawScene }) =>
       api.patch<WhiteboardFull>(`/whiteboards/${id}`, data),
-    onSuccess: (_, vars) => {
+    onSuccess: (updatedWhiteboard, vars) => {
+      // Always update the single-whiteboard cache with the server response
+      qc.setQueryData(['whiteboard', id], updatedWhiteboard);
       if (vars.name !== undefined) {
         qc.invalidateQueries({ queryKey: ['whiteboards'] });
       }

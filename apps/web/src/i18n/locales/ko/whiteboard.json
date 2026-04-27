@@ -1,0 +1,19 @@
+{
+  "title": "화이트보드",
+  "loading": "화이트보드 로딩 중...",
+  "toolbar": {
+    "backToWhiteboards": "화이트보드 목록으로",
+    "exportPng": "PNG 내보내기",
+    "save": "저장",
+    "saveShortcut": "화이트보드 저장 (Ctrl+S)"
+  },
+  "list": {
+    "title": "화이트보드",
+    "empty": "화이트보드가 없습니다",
+    "emptyDescription": "첫 번째 화이트보드를 만들어 아이디어를 스케치하세요.",
+    "create": "새 화이트보드",
+    "search": "화이트보드 검색...",
+    "lastEdited": "마지막 편집 {{time}}",
+    "confirmDelete": "이 화이트보드를 삭제하시겠습니까? 되돌릴 수 없습니다."
+  }
+}

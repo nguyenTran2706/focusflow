@@ -39,7 +39,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
       setLoading(true);
       try {
         // Get all workspaces first
-        const workspaces = await api.get<any[]>('/workspaces');
+        const workspaces = await api.get<{ id: string; name: string; slug: string }[]>('/workspaces');
         const q = query.toLowerCase();
         const matched: SearchResult[] = [];
 
@@ -59,7 +59,7 @@ export function SearchModal({ open, onClose }: { open: boolean; onClose: () => v
         // Search boards within each workspace
         for (const ws of workspaces) {
           try {
-            const boards = await api.get<any[]>(`/workspaces/${ws.id}/boards`);
+            const boards = await api.get<{ id: string; name: string }[]>(`/workspaces/${ws.id}/boards`);
             for (const board of boards) {
               if (board.name.toLowerCase().includes(q)) {
                 matched.push({

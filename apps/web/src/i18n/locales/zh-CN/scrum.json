@@ -1,0 +1,36 @@
+{
+  "title": "Scrum 看板",
+  "sprint": {
+    "planning": "冲刺规划",
+    "active": "当前冲刺",
+    "completed": "已完成",
+    "noActive": "没有进行中的冲刺",
+    "create": "创建冲刺",
+    "start": "开始冲刺",
+    "complete": "完成冲刺",
+    "name": "冲刺名称",
+    "goal": "冲刺目标",
+    "startDate": "开始日期",
+    "endDate": "结束日期",
+    "duration": "持续时间",
+    "days": "{{count}} 天"
+  },
+  "backlog": {
+    "title": "待办列表",
+    "empty": "待办列表为空",
+    "moveToSprint": "移入冲刺",
+    "storyPoints": "故事点"
+  },
+  "velocity": {
+    "title": "速度图",
+    "planned": "计划",
+    "completed": "完成",
+    "average": "平均速度"
+  },
+  "burndown": {
+    "title": "燃尽图",
+    "ideal": "理想",
+    "actual": "实际",
+    "remaining": "剩余"
+  }
+}

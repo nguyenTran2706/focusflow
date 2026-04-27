@@ -1,0 +1,109 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "boards": "Boards",
+    "diagrams": "Diagrams",
+    "whiteboards": "Whiteboards",
+    "pricing": "Pricing",
+    "profile": "Profile",
+    "admin": "Admin",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "getStarted": "Get Started Free"
+  },
+  "actions": {
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "savedAgo": "Saved {{time}}s ago",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "export": "Export",
+    "import": "Import",
+    "duplicate": "Duplicate",
+    "rename": "Rename",
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "retry": "Retry",
+    "upgrade": "Upgrade",
+    "viewPlans": "View Plans",
+    "maybeLater": "Maybe Later",
+    "reload": "Reload Page",
+    "selectAll": "Select All",
+    "clearAll": "Clear All",
+    "undo": "Undo",
+    "redo": "Redo",
+    "fitView": "Fit View",
+    "creating": "Creating..."
+  },
+  "confirm": {
+    "deleteTitle": "Confirm Delete",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This cannot be undone.",
+    "clearAll": "Clear all nodes and edges?",
+    "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "saveFailed": "Save failed",
+    "autoSaveFailed": "Auto-save failed"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "label": "Language",
+    "switchTo": "Switch language"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred.",
+    "missingClerkKey": "Missing Clerk Key",
+    "setClerkKey": "Set {{key}} in your {{file}} file.",
+    "getKeyFrom": "Get your key from {{source}}"
+  },
+  "footer": {
+    "copyright": "© {{year}} FocusFlow"
+  },
+  "search": {
+    "placeholder": "Search across boards, diagrams, whiteboards...",
+    "noResults": "No results found",
+    "recentSearches": "Recent Searches"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "search": "Search",
+    "save": "Save",
+    "undo": "Undo",
+    "redo": "Redo",
+    "selectAll": "Select All",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "showShortcuts": "Show shortcuts"
+  },
+  "upgrade": {
+    "proFeature": "{{feature}} is a Pro Feature",
+    "unlockMessage": "Unlock {{feature}} and more powerful features by upgrading to the Pro or Pro Max plan.",
+    "includedWithPro": "Included with Pro",
+    "features": {
+      "unlimitedBoards": "Unlimited boards & workspaces",
+      "scrumBoards": "Scrum boards & sprint planning",
+      "whiteboardsDiagrams": "Whiteboards & diagram editors",
+      "aiTaskBreakdown": "AI-powered task breakdown",
+      "realtimeCollab": "Real-time collaboration"
+    }
+  },
+  "members_one": "{{count}} member",
+  "members_other": "{{count}} members",
+  "boards_one": "{{count}} board",
+  "boards_other": "{{count}} boards"
+}

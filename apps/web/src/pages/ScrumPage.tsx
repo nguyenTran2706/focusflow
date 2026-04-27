@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   DndContext,
@@ -16,6 +16,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { toast } from 'sonner';
 import { Sidebar } from '../components/Sidebar';
 import { TopNav } from '../components/TopNav';
 import { CardDetailPanel, PRIORITIES, LABEL_OPTIONS, TypeIcon } from '../components/CardDetailPanel';
@@ -89,9 +90,9 @@ function getStatusGroup(colName: string): 'todo' | 'progress' | 'done' {
 }
 
 const STATUS_META = {
-  todo: { label: 'To Do', color: '#6b7280', icon: '○' },
-  progress: { label: 'In Progress', color: '#f59e0b', icon: '◐' },
-  done: { label: 'Done', color: '#34d399', icon: '●' },
+  todo: { label: 'To Do', color: '#6b7280', bg: 'rgba(107,114,128,0.08)', headerBg: 'rgba(107,114,128,0.12)', icon: '○', emoji: '📋' },
+  progress: { label: 'In Progress', color: '#f59e0b', bg: 'rgba(245,158,11,0.06)', headerBg: 'rgba(245,158,11,0.12)', icon: '◐', emoji: '⚡' },
+  done: { label: 'Done', color: '#34d399', bg: 'rgba(52,211,153,0.06)', headerBg: 'rgba(52,211,153,0.12)', icon: '●', emoji: '✅' },
 } as const;
 
 // ── Draggable Sprint Card ──────────────────────────────────────────────────
@@ -114,21 +115,55 @@ function SortableSprintCard({ card, onClick }: { card: Card; onClick: () => void
   );
 }
 
+const STICKY_COLORS = [
+  { bg: '#fef3c7', border: '#fcd34d', text: '#92400e' },
+  { bg: '#fce7f3', border: '#f9a8d4', text: '#9d174d' },
+  { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' },
+  { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' },
+  { bg: '#ede9fe', border: '#c4b5fd', text: '#5b21b6' },
+  { bg: '#ffedd5', border: '#fdba74', text: '#9a3412' },
+  { bg: '#e0e7ff', border: '#a5b4fc', text: '#3730a3' },
+  { bg: '#fef9c3', border: '#fde047', text: '#854d0e' },
+];
+
+function getStickyColor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = ((hash << 5) - hash) + id.charCodeAt(i);
+  return STICKY_COLORS[Math.abs(hash) % STICKY_COLORS.length];
+}
+
 function SprintCard({ card, overlay }: { card: Card; overlay?: boolean }) {
   const statusGroup = getStatusGroup(card.column?.name ?? 'To Do');
+  const sticky = getStickyColor(card.id);
+  const isDone = statusGroup === 'done';
 
   return (
     <div
-      className={`bg-bg-card border border-border-subtle rounded-lg p-3 transition-all group ${overlay ? 'shadow-xl ring-2 ring-accent/40 rotate-[2deg]' : 'hover:shadow-md hover:-translate-y-[1px] cursor-grab active:cursor-grabbing'
-        }`}
-      style={card.priority ? { borderLeftWidth: '3px', borderLeftColor: getPriorityColor(card.priority) } : undefined}
+      className={`relative rounded-lg p-3.5 transition-all group select-none ${
+        overlay
+          ? 'shadow-2xl rotate-[3deg] scale-105'
+          : 'hover:shadow-lg hover:-translate-y-1 hover:rotate-[-0.5deg] cursor-grab active:cursor-grabbing active:scale-[1.02]'
+      } ${isDone ? 'opacity-60' : ''}`}
+      style={{
+        background: sticky.bg,
+        borderLeft: `4px solid ${card.priority ? getPriorityColor(card.priority) : sticky.border}`,
+        boxShadow: overlay
+          ? '0 20px 40px rgba(0,0,0,0.3), 0 0 0 2px rgba(99,102,241,0.4)'
+          : '0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
+      }}
     >
+      {/* Pin decoration */}
+      <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full opacity-40"
+        style={{ background: sticky.border, boxShadow: `0 1px 3px ${sticky.border}` }} />
+
+      {/* Labels */}
       {card.labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {card.labels.slice(0, 3).map((l) => {
             const info = LABEL_OPTIONS.find((o) => o.value === l);
             return info ? (
-              <span key={l} className="text-[0.5rem] font-bold uppercase tracking-wider px-1.5 py-[1px] rounded" style={{ color: info.color, background: info.bg }}>
+              <span key={l} className="text-[0.5rem] font-bold uppercase tracking-wider px-1.5 py-[2px] rounded-full shadow-sm"
+                style={{ color: '#fff', background: info.color }}>
                 {info.label}
               </span>
             ) : null;
@@ -136,22 +171,26 @@ function SprintCard({ card, overlay }: { card: Card; overlay?: boolean }) {
         </div>
       )}
 
+      {/* Title */}
       <div className="flex items-start gap-1.5">
-        <TypeIcon type={card.type ?? 'task'} size={13} />
-        <p className={`text-[0.8rem] font-medium text-text-primary leading-snug flex-1 ${statusGroup === 'done' ? 'line-through opacity-50' : ''}`}>
+        <TypeIcon type={card.type ?? 'task'} size={14} />
+        <p className={`text-[0.82rem] font-semibold leading-snug flex-1 ${isDone ? 'line-through' : ''}`}
+          style={{ color: sticky.text }}>
           {card.title}
         </p>
       </div>
 
-      <div className="flex items-center justify-between mt-2">
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-2.5 pt-2" style={{ borderTop: `1px dashed ${sticky.border}` }}>
         <div className="flex items-center gap-1.5">
           {card.priority && (
-            <span className="text-[0.55rem] font-semibold px-1.5 py-[1px] rounded" style={{ color: getPriorityColor(card.priority), background: `${getPriorityColor(card.priority)}15` }}>
+            <span className="text-[0.55rem] font-bold px-1.5 py-[2px] rounded-full text-white shadow-sm"
+              style={{ background: getPriorityColor(card.priority) }}>
               {PRIORITIES.find((p) => p.value === card.priority)?.label}
             </span>
           )}
           {(card._count?.comments ?? 0) > 0 && (
-            <span className="text-[0.6rem] text-text-muted flex items-center gap-0.5">
+            <span className="text-[0.6rem] flex items-center gap-0.5" style={{ color: sticky.text, opacity: 0.6 }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
               {card._count!.comments}
             </span>
@@ -159,12 +198,15 @@ function SprintCard({ card, overlay }: { card: Card; overlay?: boolean }) {
         </div>
         <div className="flex items-center gap-1.5">
           {card.storyPoints != null && (
-            <span className="min-w-[18px] h-[18px] rounded-full bg-accent/15 text-accent text-[0.6rem] font-bold flex items-center justify-center px-1">
+            <span className="min-w-[20px] h-[20px] rounded-full text-[0.6rem] font-bold flex items-center justify-center px-1 text-white shadow-sm"
+              style={{ background: '#6366f1' }}>
               {card.storyPoints}
             </span>
           )}
           {card.assignee && (
-            <div className="w-[20px] h-[20px] rounded-full bg-accent/60 flex items-center justify-center text-[0.5rem] font-bold text-white" title={card.assignee.name}>
+            <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center text-[0.55rem] font-bold text-white shadow-sm"
+              style={{ background: '#6366f1' }}
+              title={card.assignee.name}>
               {card.assignee.name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -181,38 +223,79 @@ function StatusColumn({
   cards,
   columnId,
   onCardClick,
+  onCreateCard,
 }: {
   status: 'todo' | 'progress' | 'done';
   cards: Card[];
   columnId: string | null;
   onCardClick: (id: string) => void;
+  onCreateCard?: (columnId: string, title: string) => Promise<void>;
 }) {
   const meta = STATUS_META[status];
   const totalPts = cards.reduce((s, c) => s + (c.storyPoints ?? 0), 0);
   const cardIds = cards.map((c) => c.id);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [creating, setCreating] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isAdding && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isAdding]);
+
+  const handleCreate = async () => {
+    if (!newTitle.trim() || !columnId || !onCreateCard) return;
+    setCreating(true);
+    try {
+      await onCreateCard(columnId, newTitle.trim());
+      setNewTitle('');
+      setIsAdding(false);
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to create card'); }
+    finally { setCreating(false); }
+  };
 
   return (
     <div
-      className="flex flex-col min-w-[280px] flex-1"
+      className="flex flex-col min-w-[300px] flex-1 rounded-xl overflow-hidden"
       data-column-id={columnId}
+      style={{ background: meta.bg }}
     >
       {/* Column header */}
-      <div className="flex items-center justify-between px-3 py-2.5 mb-2">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ background: meta.color }} />
-          <h3 className="text-[0.82rem] font-bold text-text-primary">{meta.label}</h3>
-          <span className="min-w-[20px] h-[20px] rounded-full bg-white/[0.08] text-[0.65rem] font-semibold text-text-muted flex items-center justify-center">
+      <div className="flex items-center justify-between px-4 py-3" style={{ background: meta.headerBg }}>
+        <div className="flex items-center gap-2.5">
+          <span className="text-base">{meta.emoji}</span>
+          <h3 className="text-[0.88rem] font-bold text-text-primary">{meta.label}</h3>
+          <span className="min-w-[24px] h-[24px] rounded-full text-[0.7rem] font-bold flex items-center justify-center px-1.5 text-white shadow-sm"
+            style={{ background: meta.color }}>
             {cards.length}
           </span>
         </div>
-        {totalPts > 0 && (
-          <span className="text-[0.65rem] font-medium text-text-muted">{totalPts} pts</span>
-        )}
+        <div className="flex items-center gap-2">
+          {totalPts > 0 && (
+            <span className="text-[0.68rem] font-semibold px-2 py-0.5 rounded-full" style={{ color: meta.color, background: `${meta.color}15` }}>
+              {totalPts} pts
+            </span>
+          )}
+          {columnId && onCreateCard && (
+            <button
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-text-muted hover:text-text-primary transition-all"
+              style={{ background: `${meta.color}15` }}
+              onClick={() => setIsAdding(true)}
+              title="Add a card"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Droppable area */}
       <SortableContext items={cardIds} strategy={verticalListSortingStrategy} id={columnId ?? status}>
-        <div className="flex-1 flex flex-col gap-2 px-2 pb-4 min-h-[120px] rounded-lg transition-colors">
+        <div className="flex-1 flex flex-col gap-3 px-3 py-3 min-h-[140px] transition-colors">
           {cards.map((card) => (
             <SortableSprintCard
               key={card.id}
@@ -220,13 +303,74 @@ function StatusColumn({
               onClick={() => onCardClick(card.id)}
             />
           ))}
-          {cards.length === 0 && (
-            <div className="flex-1 flex items-center justify-center min-h-[100px] rounded-lg border-2 border-dashed border-border-subtle/60">
-              <span className="text-[0.75rem] text-text-muted">{status === 'done' ? 'Drag cards here when done' : 'No cards'}</span>
+          {cards.length === 0 && !isAdding && (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[120px] rounded-xl border-2 border-dashed transition-colors"
+              style={{ borderColor: `${meta.color}30` }}>
+              <span className="text-2xl mb-1.5 opacity-40">{meta.emoji}</span>
+              <span className="text-[0.75rem] text-text-muted">
+                {status === 'done' ? 'Drag cards here when done' : status === 'progress' ? 'Move cards here to start' : 'No cards yet'}
+              </span>
             </div>
           )}
         </div>
       </SortableContext>
+
+      {/* Inline card creation */}
+      {isAdding ? (
+        <div className="mx-3 mb-3">
+          <div className="rounded-lg p-3 shadow-lg" style={{ background: '#fef3c7', border: '1px solid #fcd34d' }}>
+            <textarea
+              ref={inputRef}
+              className="w-full bg-transparent text-[0.85rem] placeholder:text-amber-600/50 resize-none outline-none min-h-[50px]"
+              style={{ color: '#92400e' }}
+              placeholder="Write on this sticky note..."
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleCreate();
+                }
+                if (e.key === 'Escape') {
+                  setIsAdding(false);
+                  setNewTitle('');
+                }
+              }}
+              disabled={creating}
+            />
+            <div className="flex items-center gap-2 mt-1.5 pt-2" style={{ borderTop: '1px dashed #fcd34d' }}>
+              <button
+                className="px-3.5 py-1.5 rounded-lg text-[0.78rem] font-semibold bg-accent text-white hover:bg-[#5558e6] transition-colors disabled:opacity-50 shadow-sm"
+                onClick={handleCreate}
+                disabled={!newTitle.trim() || creating}
+              >
+                {creating ? 'Adding...' : 'Add Card'}
+              </button>
+              <button
+                className="p-1.5 rounded-lg text-amber-700/60 hover:text-amber-700 hover:bg-amber-200/50 transition-colors"
+                onClick={() => { setIsAdding(false); setNewTitle(''); }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M18 6L6 18" /><path d="M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        columnId && onCreateCard && (
+          <button
+            className="mx-3 mb-3 flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-[0.78rem] font-semibold transition-all hover:shadow-sm"
+            style={{ color: meta.color, background: `${meta.color}10` }}
+            onClick={() => setIsAdding(true)}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add a card
+          </button>
+        )
+      )}
     </div>
   );
 }
@@ -289,7 +433,7 @@ export function ScrumPage() {
         setSelectedSprintId(null);
         setSprintCards([]);
       }
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to load sprint data'); }
     finally { setLoading(false); }
   }, [boardId, selectedSprintId]);
 
@@ -300,7 +444,7 @@ export function ScrumPage() {
     try {
       const detail = await api.get<Sprint>(`/sprints/${sprintId}`);
       setSprintCards(detail.cards ?? []);
-    } catch { /* */ }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to load sprint'); }
   };
 
   // ── Current sprint helpers ─────────────────────────────────────────────
@@ -405,20 +549,31 @@ export function ScrumPage() {
 
   const handleStartSprint = async (sprintId: string) => {
     setActionLoading(true);
-    try { await api.post(`/sprints/${sprintId}/start`); await fetchData(); } catch { /* */ }
+    try { await api.post(`/sprints/${sprintId}/start`); await fetchData(); toast.success('Sprint started'); } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to start sprint'); }
     finally { setActionLoading(false); }
   };
 
   const handleCompleteSprint = async () => {
     if (!currentSprint) return;
     setActionLoading(true);
-    try { await api.post(`/sprints/${currentSprint.id}/complete`); await fetchData(); } catch { /* */ }
+    try { await api.post(`/sprints/${currentSprint.id}/complete`); await fetchData(); toast.success('Sprint completed'); } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to complete sprint'); }
     finally { setActionLoading(false); }
   };
 
   const handleDeleteSprint = async (sprintId: string) => {
-    try { await api.delete(`/sprints/${sprintId}`); await fetchData(); } catch { /* */ }
+    try { await api.delete(`/sprints/${sprintId}`); await fetchData(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to delete sprint'); }
   };
+
+  // ── Create card in sprint ──────────────────────────────────────────────
+
+  const handleCreateCard = useCallback(async (columnId: string, title: string) => {
+    if (!currentSprint) return;
+    try {
+      const card = await api.post<Card>(`/columns/${columnId}/cards`, { title });
+      await api.post(`/sprints/${currentSprint.id}/cards`, { cardIds: [card.id] });
+      await fetchData();
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to create card'); }
+  }, [currentSprint, fetchData]);
 
   // ── Backlog actions ────────────────────────────────────────────────────
 
@@ -429,13 +584,14 @@ export function ScrumPage() {
       setSelectedBulk(new Set());
       setTargetSprint('');
       await fetchData();
-    } catch { /* */ }
+      toast.success('Cards moved to sprint');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to move cards'); }
   };
 
   const toggleBulk = (id: string) => {
     setSelectedBulk((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
@@ -721,19 +877,19 @@ export function ScrumPage() {
                 </div>
 
                 {/* ── 3-column sprint board with DnD ──────────────────────────── */}
-                <div className="flex-1 overflow-auto p-4">
+                <div className="flex-1 overflow-auto p-5">
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCorners}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                   >
-                    <div className="flex gap-4 min-h-full">
-                      <StatusColumn status="todo" cards={groupedCards.todo} columnId={getColumnForStatus('todo')} onCardClick={setSelectedCardId} />
-                      <StatusColumn status="progress" cards={groupedCards.progress} columnId={getColumnForStatus('progress')} onCardClick={setSelectedCardId} />
-                      <StatusColumn status="done" cards={groupedCards.done} columnId={getColumnForStatus('done')} onCardClick={setSelectedCardId} />
+                    <div className="flex gap-5 min-h-full">
+                      <StatusColumn status="todo" cards={groupedCards.todo} columnId={getColumnForStatus('todo')} onCardClick={setSelectedCardId} onCreateCard={handleCreateCard} />
+                      <StatusColumn status="progress" cards={groupedCards.progress} columnId={getColumnForStatus('progress')} onCardClick={setSelectedCardId} onCreateCard={handleCreateCard} />
+                      <StatusColumn status="done" cards={groupedCards.done} columnId={getColumnForStatus('done')} onCardClick={setSelectedCardId} onCreateCard={handleCreateCard} />
                     </div>
-                    <DragOverlay>
+                    <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
                       {activeCard && <SprintCard card={activeCard} overlay />}
                     </DragOverlay>
                   </DndContext>
@@ -939,7 +1095,7 @@ export function ScrumPage() {
           onClose={() => setSelectedCardId(null)}
           onUpdate={fetchData}
           onDelete={async (id) => {
-            try { await api.delete(`/cards/${id}`); setSelectedCardId(null); await fetchData(); } catch { /* */ }
+            try { await api.delete(`/cards/${id}`); setSelectedCardId(null); await fetchData(); } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to delete card'); }
           }}
           onDuplicate={async () => { setSelectedCardId(null); await fetchData(); }}
         />

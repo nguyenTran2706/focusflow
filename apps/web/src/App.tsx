@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ClerkProvider, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { Toaster } from 'sonner';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthSync } from './components/AuthSync';
 import { DashboardPage } from './pages/DashboardPage';
 import { WorkspacePage, BoardPage } from './pages/BoardPage';
@@ -102,18 +104,18 @@ function ProtectedRoutes() {
       <SignedIn>
         <AuthSync />
         <Routes>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/workspaces/:workspaceId" element={<WorkspacePage />} />
-          <Route path="/boards/:boardId" element={<BoardPage />} />
-          <Route path="/boards/:boardId/scrum" element={<ScrumPage />} />
-          <Route path="/boards/:boardId/whiteboards" element={<WhiteboardListPage />} />
-          <Route path="/boards/:boardId/whiteboards/:wbId" element={<WhiteboardEditorPage />} />
-          <Route path="/boards/:boardId/diagrams" element={<DiagramListPage />} />
-          <Route path="/boards/:boardId/diagrams/:dgId" element={<DiagramEditorPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/invites/:token" element={<AcceptInvitePage />} />
+          <Route path="/dashboard" element={<ErrorBoundary><DashboardPage /></ErrorBoundary>} />
+          <Route path="/workspaces/:workspaceId" element={<ErrorBoundary><WorkspacePage /></ErrorBoundary>} />
+          <Route path="/boards/:boardId" element={<ErrorBoundary><BoardPage /></ErrorBoundary>} />
+          <Route path="/boards/:boardId/scrum" element={<ErrorBoundary><ScrumPage /></ErrorBoundary>} />
+          <Route path="/boards/:boardId/whiteboards" element={<ErrorBoundary><WhiteboardListPage /></ErrorBoundary>} />
+          <Route path="/boards/:boardId/whiteboards/:wbId" element={<ErrorBoundary><WhiteboardEditorPage /></ErrorBoundary>} />
+          <Route path="/boards/:boardId/diagrams" element={<ErrorBoundary><DiagramListPage /></ErrorBoundary>} />
+          <Route path="/boards/:boardId/diagrams/:dgId" element={<ErrorBoundary><DiagramEditorPage /></ErrorBoundary>} />
+          <Route path="/profile" element={<ErrorBoundary><ProfilePage /></ErrorBoundary>} />
+          <Route path="/pricing" element={<ErrorBoundary><PricingPage /></ErrorBoundary>} />
+          <Route path="/admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
+          <Route path="/invites/:token" element={<ErrorBoundary><AcceptInvitePage /></ErrorBoundary>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         <ChatWidget />
@@ -177,6 +179,13 @@ function App() {
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </BrowserRouter>
+        <Toaster
+          position="bottom-right"
+          richColors
+          toastOptions={{
+            className: 'text-sm',
+          }}
+        />
       </QueryClientProvider>
     </ClerkProvider>
   );
