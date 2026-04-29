@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RetroService } from './retro.service.js';
 import { AiService } from '../ai/ai.service.js';
 
-const mockAi = { completeJson: jest.fn() };
+const mockAi = { completeJson: jest.fn<(s: string, p: string, m?: number) => Promise<unknown>>() };
 
 describe('RetroService', () => {
   let service: RetroService;

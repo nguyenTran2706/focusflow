@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { StripeService } from './stripe.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { EmailService } from '../email/email.service.js';
 
 const mockPrisma = {
   user: {
@@ -34,6 +35,7 @@ describe('StripeService', () => {
         StripeService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: ConfigService, useValue: mockConfig },
+        { provide: EmailService, useValue: { sendSubscriptionConfirmation: jest.fn() } },
       ],
     }).compile();
 

@@ -4,7 +4,7 @@ import { SummarizeService } from './summarize.service.js';
 import { AiService } from '../ai/ai.service.js';
 
 const mockAi = {
-  completeJson: jest.fn(),
+  completeJson: jest.fn<(s: string, p: string, m?: number) => Promise<unknown>>(),
 };
 
 describe('SummarizeService', () => {
