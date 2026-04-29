@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: focusflow-api
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm install && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build -w apps/api
+    startCommand: cd apps/api && npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: API_PORT
+        value: "3001"
+      - key: CORS_ORIGIN
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_WEBHOOK_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-4-6
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_ID_PRO
+        sync: false
+      - key: STRIPE_PRICE_ID_PRO_MAX
+        sync: false
+      - key: PUSHER_APP_ID
+        sync: false
+      - key: PUSHER_KEY
+        sync: false
+      - key: PUSHER_SECRET
+        sync: false
+      - key: PUSHER_CLUSTER
+        value: ap4
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FROM_EMAIL
+        sync: false
+      - key: AI_WORKER_URL
+        sync: false

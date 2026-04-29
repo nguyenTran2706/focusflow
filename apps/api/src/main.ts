@@ -47,7 +47,9 @@ async function bootstrap() {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+      : 'http://localhost:5173',
     credentials: true,
   });
   app.setGlobalPrefix('api');
@@ -58,15 +60,14 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  const port = Number(process.env.API_PORT ?? 3001);
+  const port = Number(process.env.PORT ?? process.env.API_PORT ?? 3001);
 
   try {
     await app.listen(port);
   } catch (err: any) {
-    if (err?.code === 'EADDRINUSE') {
+    if (err?.code === 'EADDRINUSE' && process.env.NODE_ENV !== 'production') {
       console.warn(`[api] Port ${port} in use — killing old process and retrying…`);
       killPortHolder(port);
-      // brief pause to let the OS release the socket
       await new Promise((r) => setTimeout(r, 1000));
       await app.listen(port);
     } else {
