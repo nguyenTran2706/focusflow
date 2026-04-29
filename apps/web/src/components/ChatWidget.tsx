@@ -67,10 +67,17 @@ export function ChatWidget() {
 
     const channel = pusher.subscribe(`chat-${chatId}`);
 
-    // Listen for new messages (from admin, bot, or user on another tab)
     channel.bind('new-message', (msg: ChatMsg) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === msg.id)) return prev;
+        if (msg.senderRole === 'USER') {
+          const tempIdx = prev.findIndex((m) => m.id.startsWith('temp-') && m.body === msg.body);
+          if (tempIdx !== -1) {
+            const updated = [...prev];
+            updated[tempIdx] = msg;
+            return updated;
+          }
+        }
         return [...prev, msg];
       });
 
@@ -126,16 +133,10 @@ export function ChatWidget() {
     setSending(true);
 
     try {
-      const res = await api.post<{ reply: ChatMsg | null; source: string }>('/chat/message', {
+      await api.post<{ reply: ChatMsg | null; source: string }>('/chat/message', {
         chatId,
         message: text,
       });
-      if (res.reply) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === res.reply!.id)) return prev;
-          return [...prev, res.reply!];
-        });
-      }
     } catch {
       // Silently fail
     } finally {

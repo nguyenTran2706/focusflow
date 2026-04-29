@@ -247,8 +247,8 @@ export function DashboardPage() {
                     <div className="w-[34px] h-[34px] rounded-md bg-accent flex items-center justify-center font-semibold text-[0.95rem] text-white">
                       {ws.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className={`px-[8px] py-[2px] rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.04em] ${ws.plan.toLowerCase() === 'free' ? 'bg-accent-subtle text-accent-light' : ws.plan.toLowerCase() === 'pro' ? 'bg-[rgba(251,191,36,0.1)] text-warning' : 'bg-[rgba(52,211,153,0.1)] text-success'}`}>
-                      {ws.plan}
+                    <span className={`px-[8px] py-[2px] rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.04em] ${(dbUser?.subscription ?? 'FREE').toLowerCase() === 'free' ? 'bg-accent-subtle text-accent-light' : (dbUser?.subscription ?? 'FREE').toLowerCase() === 'pro' ? 'bg-[rgba(251,191,36,0.1)] text-warning' : 'bg-[rgba(52,211,153,0.1)] text-success'}`}>
+                      {dbUser?.subscription === 'PRO_MAX' ? 'Pro Max' : dbUser?.subscription ?? 'FREE'}
                     </span>
                   </div>
                   <h3 className="text-[0.95rem] mb-[2px]">{ws.name}</h3>

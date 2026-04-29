@@ -6,6 +6,7 @@ import { Sidebar } from '../components/Sidebar';
 import { TopNav } from '../components/TopNav';
 import { useAuthStore } from '../lib/auth-store';
 import { api } from '../lib/api';
+import { useChatNotifications } from '../lib/chat-notifications';
 import Pusher from 'pusher-js';
 
 const pusherKey = import.meta.env.VITE_PUSHER_KEY;
@@ -459,8 +460,11 @@ function ChatsTab() {
   const selectedChatRef = useRef<string | null>(null);
   selectedChatRef.current = selectedChat;
 
-  // Fetch chat list
+  const clearAdminUnread = useChatNotifications((s) => s.clearAdmin);
+
+  // Fetch chat list + clear admin badge
   useEffect(() => {
+    clearAdminUnread();
     api.get<ChatRow[]>('/admin/chats').then(setChats).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -492,15 +496,22 @@ function ChatsTab() {
     };
   }, [selectedChat]);
 
-  // ── Pusher: Listen for new escalated chats ─────────────────────────────
+  // ── Pusher: Listen for new escalated chats + new user messages ──────────
   useEffect(() => {
     if (!pusherKey) return;
     const p = new Pusher(pusherKey, { cluster: pusherCluster });
     const channel = p.subscribe('admin-chats');
 
     channel.bind('chat-escalated', () => {
-      // Refresh the chat list when a new chat is escalated
       api.get<ChatRow[]>('/admin/chats').then(setChats).catch(() => {});
+      toast.info('A user has requested live support');
+    });
+
+    channel.bind('new-user-message', (data: { chatId: string; userName: string; preview: string }) => {
+      api.get<ChatRow[]>('/admin/chats').then(setChats).catch(() => {});
+      if (selectedChatRef.current !== data.chatId) {
+        toast(`${data.userName}: ${data.preview}`, { icon: '💬' });
+      }
     });
 
     return () => {

@@ -45,6 +45,13 @@ export class ChatService {
 
     await this.pusher.trigger(`chat-${chatId}`, 'new-message', userMsg);
 
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
+    await this.pusher.trigger('admin-chats', 'new-user-message', {
+      chatId,
+      userName: user?.name ?? 'User',
+      preview: body.length > 80 ? body.slice(0, 80) + '…' : body,
+    });
+
     const chat = await this.prisma.chat.findUnique({ where: { id: chatId } });
     if (chat?.status === 'HUMAN' || chat?.status === 'WAITING_HUMAN') {
       return { reply: null, source: 'waiting_human' };

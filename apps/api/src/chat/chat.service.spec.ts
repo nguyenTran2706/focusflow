@@ -19,6 +19,9 @@ const mockPrisma = {
   faq: {
     findMany: jest.fn(),
   },
+  user: {
+    findUnique: jest.fn(),
+  },
 };
 
 const mockPusher = { trigger: jest.fn().mockResolvedValue(undefined) };
@@ -74,6 +77,7 @@ describe('ChatService', () => {
     it('should return FAQ answer when matched', async () => {
       mockPrisma.chatMessage.create.mockResolvedValue({ id: 'm1', body: 'test' });
       mockPrisma.chat.findUnique.mockResolvedValue({ status: 'BOT' });
+      mockPrisma.user.findUnique.mockResolvedValue({ name: 'Test', email: 'test@test.com' });
       mockPrisma.faq.findMany.mockResolvedValue([
         { question: 'How does pricing work for teams?', answer: 'We have three tiers.' },
       ]);
@@ -89,6 +93,7 @@ describe('ChatService', () => {
 
     it('should skip bot response when chat is in HUMAN mode', async () => {
       mockPrisma.chatMessage.create.mockResolvedValue({ id: 'm1', body: 'hello' });
+      mockPrisma.user.findUnique.mockResolvedValue({ name: 'Test', email: 'test@test.com' });
       mockPrisma.chat.findUnique.mockResolvedValue({ status: 'HUMAN' });
 
       const result = await service.handleMessage('u1', 'chat1', 'hello');

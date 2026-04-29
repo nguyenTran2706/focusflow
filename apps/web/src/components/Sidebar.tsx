@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../lib/auth-store';
 import { useThemeStore, type ThemeMode } from '../lib/theme-store';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { useChatNotifications, initAdminChatListener } from '../lib/chat-notifications';
 
 const THEME_OPTIONS: { value: ThemeMode; labelKey: string }[] = [
   { value: 'light', labelKey: 'theme.light' },
@@ -47,6 +48,11 @@ export function Sidebar() {
   const dbUser = useAuthStore((s) => s.dbUser);
   const { mode, setMode } = useThemeStore();
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const adminUnread = useChatNotifications((s) => s.adminUnread);
+
+  useEffect(() => {
+    if (dbUser?.role === 'ADMIN') initAdminChatListener();
+  }, [dbUser?.role]);
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[var(--spacing-sidebar)] flex flex-col p-4 z-[100] bg-bg-surface border-r border-border-subtle">
@@ -104,6 +110,11 @@ export function Sidebar() {
               <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
             {t('nav.admin')}
+            {adminUnread > 0 && (
+              <span className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-[0.6rem] font-bold text-white" style={{ background: '#ef4444', boxShadow: '0 2px 8px rgba(239,68,68,0.4)' }}>
+                {adminUnread > 9 ? '9+' : adminUnread}
+              </span>
+            )}
           </NavLink>
         )}
       </nav>
