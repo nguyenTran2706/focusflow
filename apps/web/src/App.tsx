@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ClerkProvider, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { dark } from '@clerk/themes';
 import { Toaster } from 'sonner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthSync } from './components/AuthSync';
@@ -33,6 +34,7 @@ const queryClient = new QueryClient({
 // ── Clerk theme presets ──────────────────────────────────────────────────────
 
 const CLERK_DARK = {
+  baseTheme: dark,
   variables: {
     colorPrimary: '#7c3aed',
     colorBackground: '#161822',
@@ -42,18 +44,6 @@ const CLERK_DARK = {
     borderRadius: '8px',
   },
   elements: {
-    formButtonPrimary: 'bg-accent hover:bg-[#6d28d9]',
-    card: 'bg-bg-surface border border-border-subtle shadow-xl',
-    headerTitle: 'text-text-primary',
-    headerSubtitle: 'text-text-secondary',
-    socialButtonsBlockButton: 'border-border-subtle bg-bg-input text-text-primary hover:bg-bg-card',
-    formFieldInput: 'border-border-subtle bg-bg-input text-text-primary',
-    footerActionLink: 'text-accent hover:text-accent-light',
-    identityPreviewEditButton: 'text-accent',
-    userButtonPopoverCard: 'bg-[#1c1f2e] border border-[rgba(255,255,255,0.10)]',
-    userButtonPopoverActionButton: 'text-[#f0f0f5] hover:bg-[rgba(255,255,255,0.08)]',
-    userButtonPopoverActionButtonText: 'text-[#f0f0f5]',
-    userButtonPopoverActionButtonIcon: 'text-[#a8abbe]',
     userButtonPopoverFooter: 'hidden',
   },
 };
@@ -68,18 +58,6 @@ const CLERK_LIGHT = {
     borderRadius: '8px',
   },
   elements: {
-    formButtonPrimary: 'bg-accent hover:bg-[#6d28d9]',
-    card: 'bg-white border border-[rgba(0,0,0,0.10)] shadow-xl',
-    headerTitle: 'text-[#1a1a2e]',
-    headerSubtitle: 'text-[#4a4a68]',
-    socialButtonsBlockButton: 'border-[rgba(0,0,0,0.10)] bg-[#f5f5f7] text-[#1a1a2e] hover:bg-[#e8e8ec]',
-    formFieldInput: 'border-[rgba(0,0,0,0.10)] bg-[#f5f5f7] text-[#1a1a2e]',
-    footerActionLink: 'text-[#7c3aed] hover:text-[#6d28d9]',
-    identityPreviewEditButton: 'text-[#7c3aed]',
-    userButtonPopoverCard: 'bg-white border border-[rgba(0,0,0,0.10)]',
-    userButtonPopoverActionButton: 'text-[#1a1a2e] hover:bg-[rgba(0,0,0,0.05)]',
-    userButtonPopoverActionButtonText: 'text-[#1a1a2e]',
-    userButtonPopoverActionButtonIcon: 'text-[#4a4a68]',
     userButtonPopoverFooter: 'hidden',
   },
 };
