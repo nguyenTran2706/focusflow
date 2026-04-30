@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../lib/auth-store';
+import { api } from '../lib/api';
 import { UpgradeModal } from './UpgradeModal';
 
 const TABS = [
@@ -18,6 +19,15 @@ export function BoardTabs({ boardId }: { boardId: string }) {
   const dbUser = useAuthStore((s) => s.dbUser);
   const isFree = dbUser?.subscription === 'FREE';
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; feature: string }>({ open: false, feature: '' });
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.get<{ workspaceId: string }>(`/boards/${boardId}`)
+      .then((b) => { if (!cancelled) setWorkspaceId(b.workspaceId); })
+      .catch(() => { /* ignore — back button just falls back to history */ });
+    return () => { cancelled = true; };
+  }, [boardId]);
 
   const basePath = `/boards/${boardId}`;
 
@@ -39,7 +49,16 @@ export function BoardTabs({ boardId }: { boardId: string }) {
 
   return (
     <>
-      <div className="flex gap-1 px-6 border-b border-border-subtle bg-bg-root">
+      <div className="flex items-center gap-1 px-6 border-b border-border-subtle bg-bg-root">
+        <button
+          className="flex items-center gap-1.5 px-2.5 py-2 mr-1 rounded-md text-[0.78rem] font-medium text-text-muted hover:bg-white/10 hover:text-text-primary transition-colors"
+          onClick={() => workspaceId ? navigate(`/workspaces/${workspaceId}`) : navigate(-1)}
+          title="Back to workspace"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+          </svg>
+        </button>
         {TABS.map((tab) => (
           <button
             key={tab.key}

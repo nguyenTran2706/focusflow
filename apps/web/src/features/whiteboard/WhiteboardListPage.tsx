@@ -88,13 +88,13 @@ export function WhiteboardListPage() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-          <TopNav title={t('list.title')} />
-          {boardId && <BoardTabs boardId={boardId} />}
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+        <TopNav title={t('list.title')} />
+        {boardId && <BoardTabs boardId={boardId} />}
+        {isLoading ? (
           <div className="flex-1 p-6">
             <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
               {[1, 2, 3].map((i) => (
@@ -102,18 +102,7 @@ export function WhiteboardListPage() {
               ))}
             </div>
           </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!whiteboards?.length) {
-    return (
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-          <TopNav title="Whiteboards" />
-          {boardId && <BoardTabs boardId={boardId} />}
+        ) : !whiteboards?.length ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-16 px-8 gap-3 animate-fade-in">
             <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-accent-subtle text-accent-light mb-2">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -131,17 +120,7 @@ export function WhiteboardListPage() {
               {createMut.isPending ? tc('actions.creating') : t('list.create')}
             </button>
           </div>
-        </main>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
-        <TopNav title="Whiteboards" />
-        {boardId && <BoardTabs boardId={boardId} />}
+        ) : (
         <div className="flex-1 p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-[1rem] font-semibold text-text-primary">
@@ -149,7 +128,7 @@ export function WhiteboardListPage() {
             </h3>
             <button
               className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
-              onClick={handleCreate}
+              onClick={openCreate}
               disabled={createMut.isPending}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -210,6 +189,7 @@ export function WhiteboardListPage() {
             ))}
           </div>
         </div>
+        )}
       </main>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('list.create')}>

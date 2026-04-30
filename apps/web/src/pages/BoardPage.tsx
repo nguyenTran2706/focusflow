@@ -27,6 +27,8 @@ import { BoardTabs } from '../components/BoardTabs';
 import { CardDetailPanel, PRIORITIES, LABEL_OPTIONS, TypeIcon } from '../components/CardDetailPanel';
 import { WorkspaceSummaryPage } from './WorkspaceSummaryPage';
 import { api } from '../lib/api';
+import { useAuthStore } from '../lib/auth-store';
+import { formatPlanLabel } from '../lib/permissions';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -375,7 +377,8 @@ export function WorkspacePage() {
   const [activeTab, setActiveTab] = useState<'summary' | 'board' | 'settings'>('summary');
   const [wsName, setWsName] = useState('');
   const [wsSlug, setWsSlug] = useState('');
-  const [wsPlan, setWsPlan] = useState('');
+  const dbUser = useAuthStore((s) => s.dbUser);
+  const planLabel = formatPlanLabel(dbUser?.subscription);
   const [editingWsName, setEditingWsName] = useState(false);
   const [wsNameDraft, setWsNameDraft] = useState('');
   const [confirmDeleteWs, setConfirmDeleteWs] = useState(false);
@@ -384,7 +387,7 @@ export function WorkspacePage() {
   const fetchWorkspace = async () => {
     try {
       const data = await api.get<{ name: string; slug: string; plan: string }>(`/workspaces/${workspaceId}`);
-      setWsName(data.name); setWsSlug(data.slug); setWsPlan(data.plan);
+      setWsName(data.name); setWsSlug(data.slug);
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to load workspace'); }
   };
 
@@ -431,7 +434,7 @@ export function WorkspacePage() {
       <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
           title={wsName || 'Workspace'}
-          subtitle={wsSlug ? `/${wsSlug} · ${wsPlan}` : ''}
+          subtitle={wsSlug ? `/${wsSlug} · ${planLabel}` : ''}
           actions={
             <div className="flex items-center gap-2">
               <button className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-transparent text-text-secondary hover:bg-white/10 hover:text-text-primary" onClick={() => navigate('/dashboard')}>
@@ -507,7 +510,7 @@ export function WorkspacePage() {
               <h4 className="text-[0.85rem] font-semibold text-text-primary mb-3">Details</h4>
               <div className="flex flex-col gap-2 text-[0.825rem]">
                 <div className="flex justify-between"><span className="text-text-muted">Slug</span><span className="text-text-secondary">/{wsSlug}</span></div>
-                <div className="flex justify-between"><span className="text-text-muted">Plan</span><span className="text-text-secondary font-medium">{wsPlan}</span></div>
+                <div className="flex justify-between"><span className="text-text-muted">Plan</span><span className="text-text-secondary font-medium">{planLabel}</span></div>
                 <div className="flex justify-between"><span className="text-text-muted">Boards</span><span className="text-text-secondary">{boards.length}</span></div>
               </div>
             </div>

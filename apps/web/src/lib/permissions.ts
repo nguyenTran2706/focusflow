@@ -105,3 +105,15 @@ export function getPlanLimits(plan: Plan | string): PlanLimits {
 export function canExportFormat(plan: Plan | string, format: string): boolean {
   return getPlanLimits(plan).exportFormats.includes(format);
 }
+
+export function formatPlanLabel(plan: Plan | string | null | undefined): string {
+  switch (plan) {
+    case 'PRO_MAX':
+      return 'Pro Max';
+    case 'PRO':
+      return 'Pro';
+    case 'FREE':
+    default:
+      return 'Free';
+  }
+}
