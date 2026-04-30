@@ -4,8 +4,24 @@ import { useTranslation } from 'react-i18next';
 import { Sidebar } from '../../components/Sidebar';
 import { TopNav } from '../../components/TopNav';
 import { BoardTabs } from '../../components/BoardTabs';
+import { Modal } from '../../components/Modal';
 import { useAuthStore } from '../../lib/auth-store';
 import { useWhiteboards, useCreateWhiteboard, useDeleteWhiteboard } from './hooks/useWhiteboard';
+
+const DEFAULT_PREFIX = 'Untitled Whiteboard';
+
+function nextDefaultName(items: { name: string }[]): string {
+  const used = new Set<number>();
+  const escaped = DEFAULT_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`^${escaped}(?:\\s+(\\d+))?$`);
+  for (const item of items) {
+    const m = item.name.match(re);
+    if (m) used.add(m[1] ? parseInt(m[1], 10) : 0);
+  }
+  let n = 1;
+  while (used.has(n)) n++;
+  return `${DEFAULT_PREFIX} ${n}`;
+}
 
 export function WhiteboardListPage() {
   const { t } = useTranslation('whiteboard');
@@ -18,10 +34,21 @@ export function WhiteboardListPage() {
   const createMut = useCreateWhiteboard(boardId);
   const deleteMut = useDeleteWhiteboard(boardId);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newName, setNewName] = useState('');
 
-  const handleCreate = async () => {
+  const openCreate = () => {
+    setNewName(nextDefaultName(whiteboards ?? []));
+    setShowCreate(true);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = newName.trim() || nextDefaultName(whiteboards ?? []);
     try {
-      const wb = await createMut.mutateAsync(undefined);
+      const wb = await createMut.mutateAsync(name);
+      setShowCreate(false);
+      setNewName('');
       navigate(`/boards/${boardId}/whiteboards/${wb.id}`);
     } catch {
       /* tier limit — handled by error boundary or toast */
@@ -98,7 +125,7 @@ export function WhiteboardListPage() {
             <p className="text-text-secondary max-w-[360px] text-[0.875rem]">{t('list.emptyDescription')}</p>
             <button
               className="mt-3 inline-flex items-center justify-center gap-[6px] px-5 py-2.5 rounded-md text-[0.9rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
-              onClick={handleCreate}
+              onClick={openCreate}
               disabled={createMut.isPending}
             >
               {createMut.isPending ? tc('actions.creating') : t('list.create')}
@@ -184,6 +211,30 @@ export function WhiteboardListPage() {
           </div>
         </div>
       </main>
+
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('list.create')}>
+        <form onSubmit={handleCreate} className="flex flex-col">
+          <div className="flex flex-col gap-[6px]">
+            <label htmlFor="wb-name" className="text-[0.8rem] font-medium text-text-secondary">Name</label>
+            <input
+              id="wb-name"
+              className="px-3 py-[9px] rounded-md border border-border-subtle bg-bg-input text-text-primary text-[0.875rem] outline-none focus:border-border-focus placeholder:text-text-muted w-full transition-colors"
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              autoFocus
+              onFocus={(e) => e.target.select()}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={createMut.isPending}
+            className="mt-6 inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-accent text-white hover:bg-[#5558e6] w-full disabled:opacity-50"
+          >
+            {createMut.isPending ? tc('actions.creating') : t('list.create')}
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 }
