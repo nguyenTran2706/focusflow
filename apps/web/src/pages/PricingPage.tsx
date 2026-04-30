@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Sidebar } from '../components/Sidebar';
@@ -50,6 +51,14 @@ export function PricingPage() {
   const dbUser = useAuthStore((s) => s.dbUser);
   const currentPlan = dbUser?.subscription ?? 'FREE';
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'cancelled') {
+      setSearchParams({}, { replace: true });
+      toast.info('Checkout cancelled. Your plan was not changed.');
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleUpgrade = async (planKey: string) => {
     if (!isSignedIn) return;

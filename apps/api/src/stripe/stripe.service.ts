@@ -42,6 +42,23 @@ export class StripeService {
     if (!TIER_MAP[priceId]) throw new BadRequestException('Invalid price');
 
     let customerId = user.stripeCustomerId;
+
+    // Validate existing customer still exists in current Stripe mode (test vs live)
+    if (customerId) {
+      try {
+        const existing = await this.stripe.customers.retrieve(customerId);
+        if ((existing as any).deleted) customerId = null;
+      } catch (err: any) {
+        if (err?.code === 'resource_missing') {
+          this.logger.warn(`Stale Stripe customer ${customerId} for user ${userId} — will create a new one`);
+          customerId = null;
+          await this.prisma.user.update({ where: { id: userId }, data: { stripeCustomerId: null } });
+        } else {
+          throw err;
+        }
+      }
+    }
+
     if (!customerId) {
       const customer = await this.stripe.customers.create({
         email: user.email,
@@ -77,6 +94,18 @@ export class StripeService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.stripeCustomerId) {
       throw new BadRequestException('No active subscription to manage');
+    }
+
+    // Validate customer exists in current Stripe mode
+    try {
+      const existing = await this.stripe.customers.retrieve(user.stripeCustomerId);
+      if ((existing as any).deleted) throw new BadRequestException('No active subscription to manage');
+    } catch (err: any) {
+      if (err?.code === 'resource_missing') {
+        await this.prisma.user.update({ where: { id: userId }, data: { stripeCustomerId: null, stripeSubscriptionId: null, subscription: 'FREE' } });
+        throw new BadRequestException('No active subscription to manage');
+      }
+      throw err;
     }
 
     const origin = this.config.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173';
@@ -214,7 +243,8 @@ export class StripeService {
 
     const priceId = sub.items.data[0]?.price?.id;
     const tier = priceId ? TIER_MAP[priceId] : undefined;
-    const active = sub.status === 'active' || sub.status === 'trialing';
+    // past_due = payment retrying — keep plan as grace period until Stripe cancels
+    const active = ['active', 'trialing', 'past_due'].includes(sub.status);
 
     await this.prisma.user.update({
       where: { id: userId },
