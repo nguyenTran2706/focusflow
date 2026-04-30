@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   DndContext,
@@ -26,7 +26,6 @@ import { Modal } from '../components/Modal';
 import { BoardTabs } from '../components/BoardTabs';
 import { CardDetailPanel, PRIORITIES, LABEL_OPTIONS, TypeIcon } from '../components/CardDetailPanel';
 import { WorkspaceSummaryPage } from './WorkspaceSummaryPage';
-import { useAuthStore } from '../lib/auth-store';
 import { api } from '../lib/api';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -544,7 +543,7 @@ export function WorkspacePage() {
                   </svg>
                 </div>
                 <h2 className="text-[1.15rem]">No boards yet</h2>
-                <p className="text-text-secondary max-w-[360px] text-[0.875rem]">Create your first Kanban board to start managing tasks.</p>
+                <p className="text-text-secondary max-w-[360px] text-[0.875rem]">Create a board to start managing tasks. Each board includes Kanban, Scrum, Whiteboards and Diagrams.</p>
                 <button className="mt-3 inline-flex items-center justify-center gap-[6px] px-5 py-2.5 rounded-md text-[0.9rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors" onClick={() => setShowCreate(true)}>Create Board</button>
               </div>
             ) : (
@@ -591,8 +590,6 @@ import { useRealtime } from '../hooks/useRealtime';
 export function BoardPage() {
   const { boardId } = useParams<{ boardId: string }>();
   useRealtime(boardId);
-  const dbUser = useAuthStore((s) => s.dbUser);
-  const isFree = dbUser?.subscription === 'FREE';
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
   const [addingCol, setAddingCol] = useState(false);
@@ -666,15 +663,21 @@ export function BoardPage() {
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to add column'); }
   };
 
+  const addingCardRef = useRef(false);
   const addCard = async (e: React.FormEvent, columnId: string) => {
     e.preventDefault();
-    if (!newCardTitle.trim()) return;
+    if (!newCardTitle.trim() || addingCardRef.current) return;
+    addingCardRef.current = true;
     try {
       await api.post(`/columns/${columnId}/cards`, { title: newCardTitle });
       setNewCardTitle('');
       setAddingCardCol(null);
       fetchBoard();
-    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to add card'); }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to add card');
+    } finally {
+      addingCardRef.current = false;
+    }
   };
 
   const deleteCard = async (cardId: string) => {
@@ -938,15 +941,6 @@ export function BoardPage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-              </button>
-              <div className="w-px h-5 bg-border-subtle mx-1" />
-              <button
-                className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-transparent text-text-secondary hover:bg-white/10 hover:text-text-primary"
-                onClick={() => navigate(`/boards/${boardId}/scrum`)}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
-                Scrum Board
-                {isFree && <span className="ml-1 px-[5px] py-[1px] rounded text-[0.6rem] font-bold uppercase tracking-wide bg-warning/15 text-warning">Pro</span>}
               </button>
               <div className="w-px h-5 bg-border-subtle mx-1" />
               <button className="inline-flex items-center justify-center gap-[6px] px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium transition-colors whitespace-nowrap bg-transparent text-text-secondary hover:bg-white/10 hover:text-text-primary" onClick={() => board && navigate(`/workspaces/${board.workspaceId}`)}>

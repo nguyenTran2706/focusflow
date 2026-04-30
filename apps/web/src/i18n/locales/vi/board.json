@@ -1,5 +1,5 @@
 {
-  "tabs": { "summary": "Tổng quan", "board": "Board", "scrum": "Scrum", "diagrams": "Sơ đồ", "whiteboards": "Bảng trắng" },
+  "tabs": { "summary": "Tổng quan", "board": "Kanban", "scrum": "Scrum", "diagrams": "Sơ đồ", "whiteboards": "Bảng trắng" },
   "columns": { "addColumn": "Thêm cột", "newColumn": "Cột mới", "deleteColumn": "Xóa cột" },
   "cards": { "addCard": "Thêm thẻ", "newCard": "Thẻ mới", "deleteCard": "Xóa thẻ", "noDescription": "Chưa có mô tả", "assignee": "Người phụ trách", "dueDate": "Hạn chót", "type": "Loại", "description": "Mô tả", "comments": "Bình luận", "attachments": "Tệp đính kèm" },
   "workspace": { "settings": "Cài đặt workspace", "members": "Thành viên", "invite": "Mời", "inviteMembers": "Mời thành viên", "role": "Vai trò", "removeMember": "Xóa thành viên", "rename": "Đổi tên", "delete": "Xóa Workspace" },

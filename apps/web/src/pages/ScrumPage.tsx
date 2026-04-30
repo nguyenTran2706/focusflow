@@ -12,7 +12,7 @@ import {
 } from '@dnd-kit/core';
 import {
   SortableContext,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -294,8 +294,8 @@ function StatusColumn({
       </div>
 
       {/* Droppable area */}
-      <SortableContext items={cardIds} strategy={verticalListSortingStrategy} id={columnId ?? status}>
-        <div className="flex-1 flex flex-col gap-3 px-3 py-3 min-h-[140px] transition-colors">
+      <SortableContext items={cardIds} strategy={rectSortingStrategy} id={columnId ?? status}>
+        <div className="flex-1 grid grid-cols-2 auto-rows-min gap-3 px-3 py-3 min-h-[140px] transition-colors">
           {cards.map((card) => (
             <SortableSprintCard
               key={card.id}
@@ -679,14 +679,6 @@ export function ScrumPage() {
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 New Sprint
-              </button>
-              <div className="w-px h-5 bg-border-subtle mx-1" />
-              <button
-                className="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-md text-[0.8rem] font-medium text-text-secondary hover:bg-white/10 hover:text-text-primary transition-colors"
-                onClick={() => navigate(`/boards/${boardId}`)}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>
-                Kanban
               </button>
             </div>
           }
