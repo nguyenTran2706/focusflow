@@ -120,15 +120,16 @@ export function PricingPage() {
               return (
                 <div
                   key={plan.key}
-                  className="relative flex flex-col rounded-2xl border p-6 transition-all duration-200 animate-fade-in"
+                  className={`relative flex flex-col rounded-2xl border p-6 transition-all duration-200 animate-fade-in ${
+                    plan.popular
+                      ? 'border-warning/35 bg-bg-card'
+                      : 'border-border-subtle bg-bg-card'
+                  }`}
                   style={{
                     animationDelay: `${i * 80}ms`,
-                    borderColor: plan.popular
-                      ? 'rgba(251,191,36,0.35)'
-                      : 'rgba(255,255,255,0.07)',
-                    background: plan.popular
-                      ? 'linear-gradient(160deg, rgba(251,191,36,0.06) 0%, rgba(30,30,34,1) 40%)'
-                      : '#1e1e22',
+                    ...(plan.popular && {
+                      backgroundImage: 'linear-gradient(160deg, rgba(251,191,36,0.08) 0%, transparent 40%)',
+                    }),
                   }}
                 >
                   {/* Popular badge */}
@@ -183,12 +184,12 @@ export function PricingPage() {
                     {plan.missingKeys.map((fk) => (
                       <li key={fk} className="flex items-start gap-2.5 text-[0.85rem]">
                         <svg
-                          className="mt-0.5 shrink-0"
+                          className="mt-0.5 shrink-0 text-text-muted"
                           width="16"
                           height="16"
                           viewBox="0 0 24 24"
                           fill="none"
-                          stroke="#5c5d6a"
+                          stroke="currentColor"
                           strokeWidth="2"
                           strokeLinecap="round"
                         >
@@ -203,12 +204,8 @@ export function PricingPage() {
                   {/* CTA */}
                   {isCurrent ? (
                     <button
-                      className="w-full py-3 rounded-lg text-[0.85rem] font-semibold border transition-colors"
-                      style={{
-                        borderColor: 'rgba(255,255,255,0.1)',
-                        color: '#9394a0',
-                        cursor: currentPlan === 'FREE' ? 'default' : 'pointer',
-                      }}
+                      className="w-full py-3 rounded-lg text-[0.85rem] font-semibold border border-border-subtle text-text-secondary transition-colors hover:bg-bg-card-hover"
+                      style={{ cursor: currentPlan === 'FREE' ? 'default' : 'pointer' }}
                       onClick={currentPlan !== 'FREE' ? handleManage : undefined}
                     >
                       {currentPlan === 'FREE' ? t('badges.currentPlan') : t('cta.manageSubscription')}

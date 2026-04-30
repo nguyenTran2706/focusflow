@@ -57,7 +57,11 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[var(--spacing-sidebar)] flex flex-col p-4 z-[100] bg-bg-surface border-r border-border-subtle">
       {/* Logo */}
-      <div className="flex items-center gap-[10px] py-2 px-3 mb-6">
+      <NavLink
+        to="/dashboard"
+        className="flex items-center gap-[10px] py-2 px-3 mb-6 rounded-md hover:bg-white/5 transition-colors"
+        aria-label="Go to dashboard"
+      >
         <div className="w-[32px] h-[32px] flex items-center justify-center bg-accent rounded-md">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <rect x="2" y="2" width="8" height="8" rx="2" fill="#8b5cf6" />
@@ -67,7 +71,7 @@ export function Sidebar() {
           </svg>
         </div>
         <span className="text-[1.05rem] font-bold text-text-primary">FocusFlow</span>
-      </div>
+      </NavLink>
 
       {/* Nav */}
       <nav className="flex-1 flex flex-col gap-[2px]">
