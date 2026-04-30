@@ -73,7 +73,7 @@ export class StripeService {
       this.logger.log(`Created Stripe customer ${customerId} for user ${userId}`);
     }
 
-    const origin = this.config.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173';
+    const origin = (this.config.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173').split(',')[0].trim();
     const session = await this.stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -108,7 +108,7 @@ export class StripeService {
       throw err;
     }
 
-    const origin = this.config.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173';
+    const origin = (this.config.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173').split(',')[0].trim();
     const session = await this.stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
       return_url: `${origin}/profile`,
