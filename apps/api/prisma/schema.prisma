@@ -126,6 +126,8 @@ model Board {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   workspaceId String   @db.ObjectId
   name        String
+  linkAccess  WhiteboardLinkAccess @default(NONE)
+  linkToken   String   @unique @default(cuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -134,8 +136,41 @@ model Board {
   sprints     Sprint[]
   whiteboards Whiteboard[]
   diagrams    Diagram[]
+  collaborators BoardCollaborator[]
+  invitations   BoardInvitation[]
 
   @@index([workspaceId])
+}
+
+model BoardCollaborator {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  boardId   String         @db.ObjectId
+  userId    String         @db.ObjectId
+  role      WhiteboardRole @default(EDITOR)
+  addedById String         @db.ObjectId
+  createdAt DateTime       @default(now())
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+  @@index([userId])
+}
+
+model BoardInvitation {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  boardId     String         @db.ObjectId
+  email       String
+  role        WhiteboardRole @default(EDITOR)
+  token       String         @unique @default(cuid())
+  invitedById String         @db.ObjectId
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime       @default(now())
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@index([boardId])
+  @@index([email])
 }
 
 model Sprint {
@@ -229,10 +264,57 @@ model Whiteboard {
   name        String   @default("Untitled Whiteboard")
   scene       Json     @default("{}")
   createdById String   @db.ObjectId
+  linkAccess  WhiteboardLinkAccess @default(NONE)
+  linkToken   String   @unique @default(cuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  collaborators WhiteboardCollaborator[]
+  invitations   WhiteboardInvitation[]
+
   @@index([boardId])
+}
+
+enum WhiteboardRole {
+  VIEWER
+  EDITOR
+}
+
+enum WhiteboardLinkAccess {
+  NONE
+  VIEW
+  EDIT
+}
+
+model WhiteboardCollaborator {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  whiteboardId String         @db.ObjectId
+  userId       String         @db.ObjectId
+  role         WhiteboardRole @default(EDITOR)
+  addedById    String         @db.ObjectId
+  createdAt    DateTime       @default(now())
+
+  whiteboard Whiteboard @relation(fields: [whiteboardId], references: [id], onDelete: Cascade)
+
+  @@unique([whiteboardId, userId])
+  @@index([userId])
+}
+
+model WhiteboardInvitation {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  whiteboardId String         @db.ObjectId
+  email        String
+  role         WhiteboardRole @default(EDITOR)
+  token        String         @unique @default(cuid())
+  invitedById  String         @db.ObjectId
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime       @default(now())
+
+  whiteboard Whiteboard @relation(fields: [whiteboardId], references: [id], onDelete: Cascade)
+
+  @@index([whiteboardId])
+  @@index([email])
 }
 
 model Diagram {
@@ -242,10 +324,46 @@ model Diagram {
   name        String   @default("Untitled Diagram")
   data        Json     @default("{}")
   createdById String   @db.ObjectId
+  linkAccess  WhiteboardLinkAccess @default(NONE)
+  linkToken   String   @unique @default(cuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  collaborators DiagramCollaborator[]
+  invitations   DiagramInvitation[]
+
   @@index([boardId])
+}
+
+model DiagramCollaborator {
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
+  diagramId  String         @db.ObjectId
+  userId     String         @db.ObjectId
+  role       WhiteboardRole @default(EDITOR)
+  addedById  String         @db.ObjectId
+  createdAt  DateTime       @default(now())
+
+  diagram Diagram @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+
+  @@unique([diagramId, userId])
+  @@index([userId])
+}
+
+model DiagramInvitation {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  diagramId   String         @db.ObjectId
+  email       String
+  role        WhiteboardRole @default(EDITOR)
+  token       String         @unique @default(cuid())
+  invitedById String         @db.ObjectId
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime       @default(now())
+
+  diagram Diagram @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+
+  @@index([diagramId])
+  @@index([email])
 }
 
 // ─── FAQ (AI Chatbot knowledge base) ────────────────────────────────────────

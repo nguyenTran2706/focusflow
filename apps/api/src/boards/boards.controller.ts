@@ -23,6 +23,9 @@ import {
   MoveCardDto,
   CreateCommentDto,
   UpdateCommentDto,
+  InviteBoardCollaboratorsDto,
+  UpdateBoardCollaboratorDto,
+  UpdateBoardLinkAccessDto,
 } from './dto/index.js';
 
 @UseGuards(ClerkAuthGuard)
@@ -207,5 +210,87 @@ export class BoardsController {
     @CurrentUser() user: { userId: string },
   ) {
     return this.boards.deleteComment(commentId, user.userId);
+  }
+
+  // ── Sharing ──────────────────────────────────────────────────────────
+
+  @Get('boards/:boardId/share')
+  getShare(
+    @Param('boardId') boardId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.getShareInfo(boardId, user.userId);
+  }
+
+  @Post('boards/:boardId/invitations')
+  invite(
+    @Param('boardId') boardId: string,
+    @Body() dto: InviteBoardCollaboratorsDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.inviteCollaborators(boardId, dto, user.userId);
+  }
+
+  @Patch('boards/:boardId/collaborators/:userId')
+  updateCollab(
+    @Param('boardId') boardId: string,
+    @Param('userId') collabUserId: string,
+    @Body() dto: UpdateBoardCollaboratorDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.updateCollaborator(boardId, collabUserId, dto, user.userId);
+  }
+
+  @Delete('boards/:boardId/collaborators/:userId')
+  removeCollab(
+    @Param('boardId') boardId: string,
+    @Param('userId') collabUserId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.removeCollaborator(boardId, collabUserId, user.userId);
+  }
+
+  @Delete('boards/:boardId/invitations/:invitationId')
+  revokeInvite(
+    @Param('boardId') boardId: string,
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.revokeInvitation(boardId, invitationId, user.userId);
+  }
+
+  @Patch('boards/:boardId/link-access')
+  updateLinkAccess(
+    @Param('boardId') boardId: string,
+    @Body() dto: UpdateBoardLinkAccessDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.updateLinkAccess(boardId, dto, user.userId);
+  }
+
+  @Post('boards/by-link/:token/join')
+  joinByLink(
+    @Param('token') token: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.joinByLink(token, user.userId);
+  }
+
+  @Post('invitations/board/:token/accept')
+  acceptInvitation(
+    @Param('token') token: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.boards.acceptInvitationByToken(token, user.userId);
+  }
+}
+
+@Controller()
+export class BoardInvitationsPublicController {
+  constructor(private readonly boards: BoardsService) {}
+
+  @Get('invitations/board/:token')
+  get(@Param('token') token: string) {
+    return this.boards.getInvitationByToken(token);
   }
 }

@@ -15,6 +15,9 @@ import { SignUpPage } from './pages/SignUpPage';
 import { ChatWidget } from './components/ChatWidget';
 import { AdminPage } from './pages/AdminPage';
 import { AcceptInvitePage } from './pages/AcceptInvitePage';
+import { AcceptWhiteboardInvitePage } from './pages/AcceptWhiteboardInvitePage';
+import { AcceptShareInvitePage } from './pages/AcceptShareInvitePage';
+import { JoinShareLinkPage } from './pages/JoinShareLinkPage';
 import { LandingPage } from './pages/LandingPage';
 import { ScrumPage } from './pages/ScrumPage';
 import { WhiteboardListPage } from './features/whiteboard/WhiteboardListPage';
@@ -94,6 +97,9 @@ function ProtectedRoutes() {
           <Route path="/pricing" element={<ErrorBoundary><PricingPage /></ErrorBoundary>} />
           <Route path="/admin" element={<ErrorBoundary><AdminPage /></ErrorBoundary>} />
           <Route path="/invites/:token" element={<ErrorBoundary><AcceptInvitePage /></ErrorBoundary>} />
+          <Route path="/whiteboards/join/:token" element={<ErrorBoundary><JoinShareLinkPage /></ErrorBoundary>} />
+          <Route path="/boards/join/:token" element={<ErrorBoundary><JoinShareLinkPage /></ErrorBoundary>} />
+          <Route path="/diagrams/join/:token" element={<ErrorBoundary><JoinShareLinkPage /></ErrorBoundary>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         <ChatWidget />
@@ -154,6 +160,11 @@ function App() {
           <Routes>
             <Route path="/sign-in/*" element={<SignInPage />} />
             <Route path="/sign-up/*" element={<SignUpPage />} />
+            {/* Whiteboard invitations (legacy path kept for existing emails) */}
+            <Route path="/invite/whiteboard/:token/*" element={<ErrorBoundary><AcceptWhiteboardInvitePage /></ErrorBoundary>} />
+            {/* Generic share invitations for board and diagram */}
+            <Route path="/invite/board/:token/*" element={<ErrorBoundary><AcceptShareInvitePage /></ErrorBoundary>} />
+            <Route path="/invite/diagram/:token/*" element={<ErrorBoundary><AcceptShareInvitePage /></ErrorBoundary>} />
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </BrowserRouter>

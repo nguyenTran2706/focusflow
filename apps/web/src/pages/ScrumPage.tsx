@@ -26,6 +26,7 @@ import { BurndownChart } from '../components/BurndownChart';
 import { VelocityChart } from '../components/VelocityChart';
 import { useAuthStore } from '../lib/auth-store';
 import { api } from '../lib/api';
+import { ShareModal } from '../features/share/ShareModal';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -401,6 +402,7 @@ export function ScrumPage() {
   const [targetSprint, setTargetSprint] = useState('');
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [showSprintList, setShowSprintList] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -671,6 +673,17 @@ export function ScrumPage() {
           }
           actions={
             <div className="flex items-center gap-2">
+              <button
+                className="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-md text-[0.8rem] font-medium text-white bg-gradient-to-br from-[#6366f1] to-[#a855f7] hover:opacity-90 transition-opacity"
+                onClick={() => setShareOpen(true)}
+                title="Share board"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                Share
+              </button>
               <button
                 className="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-md text-[0.8rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
                 onClick={() => { setEditingSprint(null); setShowPlanning(true); }}
@@ -1102,6 +1115,9 @@ export function ScrumPage() {
           onSaved={() => { setShowPlanning(false); setEditingSprint(null); fetchData(); }}
         />
       )}
+
+      {/* Share Modal */}
+      {boardId && <ShareModal resourceType="board" resourceId={boardId} open={shareOpen} onClose={() => setShareOpen(false)} />}
     </div>
   );
 }

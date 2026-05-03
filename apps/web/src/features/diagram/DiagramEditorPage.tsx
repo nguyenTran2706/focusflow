@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../../components/Sidebar';
 import { useDiagram, useUpdateDiagram } from './hooks/useDiagram';
+import { ShareModal } from '../share/ShareModal';
 import {
   ReactFlow,
   Background,
@@ -569,6 +570,7 @@ function DiagramEditor() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showPropsPanel, setShowPropsPanel] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [selectedNodeForEdit, setSelectedNodeForEdit] = useState<Node | null>(null);
   const [editingNode, setEditingNode] = useState<Node | null>(null);
   const undoStack = useRef<{ nodes: Node[]; edges: Edge[] }[]>([]);
@@ -1161,6 +1163,19 @@ function DiagramEditor() {
               </>
             )}
           </div>
+
+          {/* Share button */}
+          <button
+            className="shrink-0 inline-flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[0.72rem] font-medium text-white bg-gradient-to-br from-[#6366f1] to-[#a855f7] hover:opacity-90 transition-opacity"
+            onClick={() => setShareOpen(true)}
+            title="Share diagram"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            Share
+          </button>
         </div>
 
         {/* ── Canvas + Palette ────────────────────────────────────────── */}
@@ -1296,6 +1311,9 @@ function DiagramEditor() {
             onClose={() => setEditingNode(null)}
           />
         )}
+
+        {/* ── Share Modal ──────────────────────────────────────────────────── */}
+        {dgId && <ShareModal resourceType="diagram" resourceId={dgId} open={shareOpen} onClose={() => setShareOpen(false)} />}
       </main>
     </div>
   );

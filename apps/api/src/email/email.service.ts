@@ -2,6 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
 import { buildSubscriptionConfirmationHtml } from './templates/subscription-confirmation.js';
+import {
+  buildShareInvitationHtml,
+  ShareInvitationEmailData,
+} from './templates/share-invitation.js';
 
 export interface SubscriptionEmailData {
   to: string;
@@ -46,7 +50,7 @@ export class EmailService {
 
     try {
       const result = await this.resend.emails.send({
-        from: `FocusFlow <${this.fromEmail}>`,
+        from: `FocusFlow Team <${this.fromEmail}>`,
         to: data.to,
         subject,
         html,
@@ -54,7 +58,46 @@ export class EmailService {
       this.logger.log(`Confirmation email sent to ${data.to} — id: ${(result as any).data?.id ?? 'unknown'}`);
     } catch (err) {
       this.logger.error(`Failed to send confirmation email to ${data.to}`, (err as Error).stack);
-      // Don't throw — email failure shouldn't break the checkout flow
     }
+  }
+
+  async sendShareInvitation(data: ShareInvitationEmailData): Promise<void> {
+    const subject = `${data.inviterName} invited you to "${data.resourceName}"`;
+    const html = buildShareInvitationHtml(data);
+
+    if (!this.resend) {
+      this.logger.log(`[EMAIL PREVIEW] To: ${data.to} | ${subject} | ${data.acceptUrl}`);
+      return;
+    }
+
+    try {
+      const result = await this.resend.emails.send({
+        from: `FocusFlow Team <${this.fromEmail}>`,
+        to: data.to,
+        subject,
+        html,
+      });
+      this.logger.log(`Share invite (${data.resourceType}) sent to ${data.to} — id: ${(result as any).data?.id ?? 'unknown'}`);
+    } catch (err) {
+      this.logger.error(`Failed to send share invite to ${data.to}`, (err as Error).stack);
+    }
+  }
+
+  // Backward-compat alias used by whiteboards.service.ts
+  async sendWhiteboardInvitation(data: {
+    to: string;
+    inviterName: string;
+    whiteboardName: string;
+    role: 'VIEWER' | 'EDITOR';
+    acceptUrl: string;
+  }): Promise<void> {
+    return this.sendShareInvitation({
+      to: data.to,
+      inviterName: data.inviterName,
+      resourceType: 'whiteboard',
+      resourceName: data.whiteboardName,
+      role: data.role,
+      acceptUrl: data.acceptUrl,
+    });
   }
 }

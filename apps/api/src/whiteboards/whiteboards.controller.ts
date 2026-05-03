@@ -16,6 +16,9 @@ import {
   CreateWhiteboardDto,
   UpdateWhiteboardDto,
   BroadcastWhiteboardDto,
+  InviteCollaboratorsDto,
+  UpdateCollaboratorDto,
+  UpdateLinkAccessDto,
 } from './dto/index.js';
 
 @UseGuards(ClerkAuthGuard)
@@ -73,5 +76,88 @@ export class WhiteboardsController {
     @CurrentUser() user: { userId: string },
   ) {
     return this.whiteboards.broadcast(id, dto, user.userId);
+  }
+
+  // ─── Sharing ──────────────────────────────────────────────────────────
+
+  @Get('whiteboards/:id/share')
+  getShare(
+    @Param('id') id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.whiteboards.getShareInfo(id, user.userId);
+  }
+
+  @Post('whiteboards/:id/invitations')
+  invite(
+    @Param('id') id: string,
+    @Body() dto: InviteCollaboratorsDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.whiteboards.inviteCollaborators(id, dto, user.userId);
+  }
+
+  @Patch('whiteboards/:id/collaborators/:userId')
+  updateCollab(
+    @Param('id') id: string,
+    @Param('userId') collabUserId: string,
+    @Body() dto: UpdateCollaboratorDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.whiteboards.updateCollaborator(id, collabUserId, dto, user.userId);
+  }
+
+  @Delete('whiteboards/:id/collaborators/:userId')
+  removeCollab(
+    @Param('id') id: string,
+    @Param('userId') collabUserId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.whiteboards.removeCollaborator(id, collabUserId, user.userId);
+  }
+
+  @Delete('whiteboards/:id/invitations/:invitationId')
+  revokeInvite(
+    @Param('id') id: string,
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.whiteboards.revokeInvitation(id, invitationId, user.userId);
+  }
+
+  @Patch('whiteboards/:id/link-access')
+  updateLinkAccess(
+    @Param('id') id: string,
+    @Body() dto: UpdateLinkAccessDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.whiteboards.updateLinkAccess(id, dto, user.userId);
+  }
+
+  @Post('whiteboards/by-link/:token/join')
+  joinByLink(
+    @Param('token') token: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.whiteboards.joinByLink(token, user.userId);
+  }
+
+  @Post('invitations/whiteboard/:token/accept')
+  acceptInvitation(
+    @Param('token') token: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.whiteboards.acceptInvitationByToken(token, user.userId);
+  }
+}
+
+// Public controller — no guard, so signed-out users can preview invite info
+@Controller()
+export class WhiteboardInvitationsPublicController {
+  constructor(private readonly whiteboards: WhiteboardsService) {}
+
+  @Get('invitations/whiteboard/:token')
+  get(@Param('token') token: string) {
+    return this.whiteboards.getInvitationByToken(token);
   }
 }

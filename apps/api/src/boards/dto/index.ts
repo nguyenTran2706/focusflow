@@ -8,3 +8,9 @@ export { UpdateCardDto } from './update-card.dto.js';
 export { MoveCardDto } from './move-card.dto.js';
 export { CreateCommentDto } from './create-comment.dto.js';
 export { UpdateCommentDto } from './update-comment.dto.js';
+export {
+  InviteBoardCollaboratorsDto,
+  UpdateBoardCollaboratorDto,
+  UpdateBoardLinkAccessDto,
+  JoinBoardByLinkDto,
+} from './share.dto.js';

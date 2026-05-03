@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Sidebar } from '../../components/Sidebar';
 import { useWhiteboard, useUpdateWhiteboard } from './hooks/useWhiteboard';
+import { ShareModal } from '../share/ShareModal';
 import { Excalidraw, exportToBlob } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ export function WhiteboardEditorPage() {
   const updateMut = useUpdateWhiteboard(wbId);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const excalidrawRef = useRef<ExcalidrawAPI | null>(null);
 
   // Stable ref for mutation (same pattern as diagram)
@@ -182,6 +184,18 @@ export function WhiteboardEditorPage() {
             <h3 className="text-[0.875rem] font-semibold text-text-primary">{wb?.name ?? 'Whiteboard'}</h3>
           </div>
           <div className="flex items-center gap-3">
+            {/* Share button */}
+            <button
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[0.75rem] font-medium text-white bg-gradient-to-br from-[#6366f1] to-[#a855f7] hover:opacity-90 transition-opacity"
+              onClick={() => setShareOpen(true)}
+              title="Share"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+              Share
+            </button>
             {/* Export button */}
             <button
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[0.75rem] font-medium text-text-secondary hover:bg-white/10 hover:text-text-primary transition-colors"
@@ -236,6 +250,7 @@ export function WhiteboardEditorPage() {
             }}
           />
         </div>
+        {wbId && <ShareModal resourceType="whiteboard" resourceId={wbId} open={shareOpen} onClose={() => setShareOpen(false)} />}
       </main>
     </div>
   );

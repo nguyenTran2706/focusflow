@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   CreateBoardDto,
@@ -15,9 +17,13 @@ import {
   MoveCardDto,
   CreateCommentDto,
   UpdateCommentDto,
+  InviteBoardCollaboratorsDto,
+  UpdateBoardCollaboratorDto,
+  UpdateBoardLinkAccessDto,
 } from './dto/index.js';
 
 import { PusherService } from '../pusher/pusher.service.js';
+import { EmailService } from '../email/email.service.js';
 
 const TIER_LIMITS = {
   FREE: { boardsPerWorkspace: 3, scrum: false },
@@ -25,14 +31,62 @@ const TIER_LIMITS = {
   PRO_MAX: { boardsPerWorkspace: 999, scrum: true },
 } as const;
 
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+type AccessLevel = 'NONE' | 'VIEW' | 'EDIT' | 'MANAGE';
+
 @Injectable()
 export class BoardsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly pusher: PusherService,
+    private readonly email: EmailService,
+    private readonly config: ConfigService,
   ) {}
 
-  // ── Membership guard ──────────────────────────────────────────────────────
+  // ── Access ────────────────────────────────────────────────────────────────
+
+  private async resolveBoardAccess(
+    boardId: string,
+    userId: string,
+  ): Promise<{ level: AccessLevel; board: { id: string; workspaceId: string } }> {
+    const board = await this.prisma.board.findUnique({
+      where: { id: boardId },
+      select: { id: true, workspaceId: true },
+    });
+    if (!board) throw new NotFoundException('Board not found');
+
+    const member = await this.prisma.membership.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId: board.workspaceId } },
+    });
+    if (member) return { level: 'MANAGE', board };
+
+    const collab = await this.prisma.boardCollaborator.findUnique({
+      where: { boardId_userId: { boardId, userId } },
+    });
+    if (collab) return { level: collab.role === 'EDITOR' ? 'EDIT' : 'VIEW', board };
+
+    return { level: 'NONE', board };
+  }
+
+  private async assertBoardView(boardId: string, userId: string) {
+    const acc = await this.resolveBoardAccess(boardId, userId);
+    if (acc.level === 'NONE') throw new ForbiddenException('No access to this board');
+    return acc;
+  }
+
+  private async assertBoardEdit(boardId: string, userId: string) {
+    const acc = await this.resolveBoardAccess(boardId, userId);
+    if (acc.level === 'NONE' || acc.level === 'VIEW')
+      throw new ForbiddenException('Edit access required');
+    return acc;
+  }
+
+  private async assertBoardManage(boardId: string, userId: string) {
+    const acc = await this.resolveBoardAccess(boardId, userId);
+    if (acc.level !== 'MANAGE') throw new ForbiddenException('Only workspace members can manage sharing');
+    return acc;
+  }
 
   private async assertMember(workspaceId: string, userId: string) {
     const m = await this.prisma.membership.findUnique({
@@ -42,12 +96,12 @@ export class BoardsService {
     return m;
   }
 
-  // ── Boards ────────────────────────────────────────────────────────────────
-
   private async getUserTier(userId: string) {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     return user.subscription as keyof typeof TIER_LIMITS;
   }
+
+  // ── Boards ────────────────────────────────────────────────────────────────
 
   async createBoard(workspaceId: string, dto: CreateBoardDto, userId: string) {
     await this.assertMember(workspaceId, userId);
@@ -61,7 +115,6 @@ export class BoardsService {
       );
     }
 
-    // Create board with 3 default Jira-style columns
     return this.prisma.board.create({
       data: {
         workspaceId,
@@ -82,14 +135,13 @@ export class BoardsService {
     await this.assertMember(workspaceId, userId);
     return this.prisma.board.findMany({
       where: { workspaceId },
-      include: {
-        _count: { select: { columns: true } },
-      },
+      include: { _count: { select: { columns: true } } },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async getBoard(boardId: string, userId: string) {
+    await this.assertBoardView(boardId, userId);
     const board = await this.prisma.board.findUnique({
       where: { id: boardId },
       include: {
@@ -109,14 +161,11 @@ export class BoardsService {
       },
     });
     if (!board) throw new NotFoundException('Board not found');
-    await this.assertMember(board.workspaceId, userId);
     return board;
   }
 
   async updateBoard(boardId: string, dto: UpdateBoardDto, userId: string) {
-    const board = await this.prisma.board.findUniqueOrThrow({ where: { id: boardId } });
-    await this.assertMember(board.workspaceId, userId);
-
+    await this.assertBoardEdit(boardId, userId);
     return this.prisma.board.update({
       where: { id: boardId },
       data: { ...(dto.name !== undefined && { name: dto.name }) },
@@ -124,21 +173,15 @@ export class BoardsService {
   }
 
   async deleteBoard(boardId: string, userId: string) {
-    const board = await this.prisma.board.findUniqueOrThrow({ where: { id: boardId } });
-    await this.assertMember(board.workspaceId, userId);
-
+    await this.assertBoardManage(boardId, userId);
     return this.prisma.board.delete({ where: { id: boardId } });
   }
 
   // ── Columns ───────────────────────────────────────────────────────────────
 
   async createColumn(boardId: string, dto: CreateColumnDto, userId: string, socketId?: string) {
-    const board = await this.prisma.board.findUniqueOrThrow({
-      where: { id: boardId },
-    });
-    await this.assertMember(board.workspaceId, userId);
+    await this.assertBoardEdit(boardId, userId);
 
-    // Get the last rank to place the new column at the end
     const lastColumn = await this.prisma.boardColumn.findFirst({
       where: { boardId },
       orderBy: { rank: 'desc' },
@@ -160,13 +203,11 @@ export class BoardsService {
       where: { id: columnId },
       include: { board: true },
     });
-    await this.assertMember(column.board.workspaceId, userId);
+    await this.assertBoardEdit(column.boardId, userId);
 
     const updated = await this.prisma.boardColumn.update({
       where: { id: columnId },
-      data: {
-        ...(dto.name !== undefined && { name: dto.name }),
-      },
+      data: { ...(dto.name !== undefined && { name: dto.name }) },
       include: { cards: true },
     });
 
@@ -179,7 +220,7 @@ export class BoardsService {
       where: { id: columnId },
       include: { board: true },
     });
-    await this.assertMember(column.board.workspaceId, userId);
+    await this.assertBoardEdit(column.boardId, userId);
 
     const deleted = await this.prisma.boardColumn.delete({ where: { id: columnId } });
     await this.pusher.trigger(`private-board-${column.boardId}`, 'board.updated', { deletedColumnId: columnId }, socketId);
@@ -191,7 +232,7 @@ export class BoardsService {
       where: { id: columnId },
       include: { board: true },
     });
-    await this.assertMember(column.board.workspaceId, userId);
+    await this.assertBoardEdit(column.boardId, userId);
 
     const updated = await this.prisma.boardColumn.update({
       where: { id: columnId },
@@ -209,9 +250,8 @@ export class BoardsService {
       where: { id: columnId },
       include: { board: true },
     });
-    await this.assertMember(column.board.workspaceId, userId);
+    await this.assertBoardEdit(column.boardId, userId);
 
-    // Place at end of column
     const lastCard = await this.prisma.card.findFirst({
       where: { columnId },
       orderBy: { rank: 'desc' },
@@ -256,7 +296,7 @@ export class BoardsService {
         _count: { select: { comments: true } },
       },
     });
-    await this.assertMember(card.column.board.workspaceId, userId);
+    await this.assertBoardView(card.column.boardId, userId);
     return card;
   }
 
@@ -265,7 +305,7 @@ export class BoardsService {
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
-    await this.assertMember(card.column.board.workspaceId, userId);
+    await this.assertBoardEdit(card.column.boardId, userId);
 
     const updated = await this.prisma.card.update({
       where: { id: cardId },
@@ -297,14 +337,11 @@ export class BoardsService {
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
-    await this.assertMember(card.column.board.workspaceId, userId);
+    await this.assertBoardEdit(card.column.boardId, userId);
 
     const updated = await this.prisma.card.update({
       where: { id: cardId },
-      data: {
-        columnId: dto.targetColumnId,
-        rank: dto.rank,
-      },
+      data: { columnId: dto.targetColumnId, rank: dto.rank },
     });
 
     await this.pusher.trigger(`private-board-${card.column.boardId}`, 'board.updated', updated, socketId);
@@ -316,7 +353,7 @@ export class BoardsService {
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
-    await this.assertMember(card.column.board.workspaceId, userId);
+    await this.assertBoardEdit(card.column.boardId, userId);
 
     const deleted = await this.prisma.card.delete({ where: { id: cardId } });
     await this.pusher.trigger(`private-board-${card.column.boardId}`, 'board.updated', { deletedCardId: cardId }, socketId);
@@ -326,13 +363,10 @@ export class BoardsService {
   async duplicateCard(cardId: string, userId: string, socketId?: string) {
     const card = await this.prisma.card.findUniqueOrThrow({
       where: { id: cardId },
-      include: {
-        column: { include: { board: true } },
-      },
+      include: { column: { include: { board: true } } },
     });
-    await this.assertMember(card.column.board.workspaceId, userId);
+    await this.assertBoardEdit(card.column.boardId, userId);
 
-    // Provide a slightly higher rank
     const newRank = String(Number(card.rank) + 1);
 
     const newCard = await this.prisma.card.create({
@@ -367,7 +401,7 @@ export class BoardsService {
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
-    await this.assertMember(card.column.board.workspaceId, userId);
+    await this.assertBoardView(card.column.boardId, userId);
 
     return this.prisma.comment.findMany({
       where: { cardId },
@@ -381,14 +415,10 @@ export class BoardsService {
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
-    await this.assertMember(card.column.board.workspaceId, userId);
+    await this.assertBoardEdit(card.column.boardId, userId);
 
     return this.prisma.comment.create({
-      data: {
-        cardId,
-        authorId: userId,
-        body: dto.body,
-      },
+      data: { cardId, authorId: userId, body: dto.body },
       include: { author: { select: { id: true, name: true } } },
     });
   }
@@ -398,9 +428,8 @@ export class BoardsService {
       where: { id: commentId },
       include: { card: { include: { column: { include: { board: true } } } } },
     });
-    await this.assertMember(comment.card.column.board.workspaceId, userId);
+    await this.assertBoardView(comment.card.column.boardId, userId);
 
-    // Only the author can edit their own comment
     if (comment.authorId !== userId) {
       throw new ForbiddenException('You can only edit your own comments');
     }
@@ -417,13 +446,252 @@ export class BoardsService {
       where: { id: commentId },
       include: { card: { include: { column: { include: { board: true } } } } },
     });
-    await this.assertMember(comment.card.column.board.workspaceId, userId);
+    await this.assertBoardView(comment.card.column.boardId, userId);
 
-    // Only the author can delete their own comment
     if (comment.authorId !== userId) {
       throw new ForbiddenException('You can only delete your own comments');
     }
 
     return this.prisma.comment.delete({ where: { id: commentId } });
+  }
+
+  // ── Sharing ───────────────────────────────────────────────────────────────
+
+  async getShareInfo(boardId: string, userId: string) {
+    await this.assertBoardView(boardId, userId);
+
+    const board = await this.prisma.board.findUniqueOrThrow({
+      where: { id: boardId },
+      include: {
+        collaborators: true,
+        invitations: { where: { acceptedAt: null }, orderBy: { createdAt: 'desc' } },
+      },
+    });
+
+    const userIds = board.collaborators.map((c: any) => c.userId);
+    const users = userIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true, email: true, imageUrl: true },
+        })
+      : [];
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    return {
+      id: board.id,
+      name: board.name,
+      linkAccess: board.linkAccess,
+      linkToken: board.linkToken,
+      collaborators: board.collaborators.map((c: any) => ({
+        userId: c.userId,
+        role: c.role,
+        addedById: c.addedById,
+        createdAt: c.createdAt,
+        user: userMap.get(c.userId) ?? null,
+      })),
+      invitations: board.invitations.map((i: any) => ({
+        id: i.id,
+        email: i.email,
+        role: i.role,
+        token: i.token,
+        expiresAt: i.expiresAt,
+        createdAt: i.createdAt,
+      })),
+    };
+  }
+
+  async inviteCollaborators(boardId: string, dto: InviteBoardCollaboratorsDto, userId: string) {
+    await this.assertBoardManage(boardId, userId);
+
+    const board = await this.prisma.board.findUniqueOrThrow({ where: { id: boardId } });
+    const inviter = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const webUrl = this.config.get<string>('WEB_APP_URL') ?? 'http://localhost:5173';
+
+    const results: Array<{ email: string; status: 'collaborator' | 'invited' | 'already' }> = [];
+
+    for (const rawEmail of dto.emails) {
+      const email = rawEmail.trim().toLowerCase();
+      if (!email) continue;
+
+      const existing = await this.prisma.user.findUnique({ where: { email } });
+
+      if (existing) {
+        const member = await this.prisma.membership.findUnique({
+          where: { userId_workspaceId: { userId: existing.id, workspaceId: board.workspaceId } },
+        });
+        if (member) {
+          results.push({ email, status: 'already' });
+          continue;
+        }
+
+        const existingCollab = await this.prisma.boardCollaborator.findUnique({
+          where: { boardId_userId: { boardId, userId: existing.id } },
+        });
+        if (existingCollab) {
+          results.push({ email, status: 'already' });
+          continue;
+        }
+
+        await this.prisma.boardCollaborator.create({
+          data: { boardId, userId: existing.id, role: dto.role, addedById: userId },
+        });
+
+        const acceptUrl = `${webUrl}/boards/${boardId}`;
+        await this.email.sendShareInvitation({
+          to: email,
+          inviterName: inviter.name,
+          resourceType: 'board',
+          resourceName: board.name,
+          role: dto.role,
+          acceptUrl,
+        });
+        results.push({ email, status: 'collaborator' });
+      } else {
+        const existingInvite = await this.prisma.boardInvitation.findFirst({
+          where: { boardId, email, acceptedAt: null },
+        });
+        let token: string;
+        if (existingInvite) {
+          token = existingInvite.token;
+          await this.prisma.boardInvitation.update({
+            where: { id: existingInvite.id },
+            data: { role: dto.role, expiresAt: new Date(Date.now() + INVITE_TTL_MS) },
+          });
+        } else {
+          const created = await this.prisma.boardInvitation.create({
+            data: {
+              boardId,
+              email,
+              role: dto.role,
+              invitedById: userId,
+              expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+            },
+          });
+          token = created.token;
+        }
+
+        const acceptUrl = `${webUrl}/invite/board/${token}`;
+        await this.email.sendShareInvitation({
+          to: email,
+          inviterName: inviter.name,
+          resourceType: 'board',
+          resourceName: board.name,
+          role: dto.role,
+          acceptUrl,
+        });
+        results.push({ email, status: 'invited' });
+      }
+    }
+
+    return { results };
+  }
+
+  async updateCollaborator(boardId: string, collabUserId: string, dto: UpdateBoardCollaboratorDto, userId: string) {
+    await this.assertBoardManage(boardId, userId);
+    return this.prisma.boardCollaborator.update({
+      where: { boardId_userId: { boardId, userId: collabUserId } },
+      data: { role: dto.role },
+    });
+  }
+
+  async removeCollaborator(boardId: string, collabUserId: string, userId: string) {
+    await this.assertBoardManage(boardId, userId);
+    await this.prisma.boardCollaborator.delete({
+      where: { boardId_userId: { boardId, userId: collabUserId } },
+    });
+    return { removed: true };
+  }
+
+  async revokeInvitation(boardId: string, invitationId: string, userId: string) {
+    await this.assertBoardManage(boardId, userId);
+    await this.prisma.boardInvitation.delete({ where: { id: invitationId } });
+    return { revoked: true };
+  }
+
+  async updateLinkAccess(boardId: string, dto: UpdateBoardLinkAccessDto, userId: string) {
+    await this.assertBoardManage(boardId, userId);
+    return this.prisma.board.update({
+      where: { id: boardId },
+      data: { linkAccess: dto.access },
+      select: { id: true, linkAccess: true, linkToken: true },
+    });
+  }
+
+  async joinByLink(token: string, userId: string) {
+    const board = await this.prisma.board.findUnique({ where: { linkToken: token } });
+    if (!board) throw new NotFoundException('Invalid link');
+    if (board.linkAccess === 'NONE') throw new ForbiddenException('Link sharing is disabled');
+
+    const member = await this.prisma.membership.findUnique({
+      where: { userId_workspaceId: { userId, workspaceId: board.workspaceId } },
+    });
+    if (member) return { boardId: board.id };
+
+    const role = board.linkAccess === 'EDIT' ? 'EDITOR' : 'VIEWER';
+    const existing = await this.prisma.boardCollaborator.findUnique({
+      where: { boardId_userId: { boardId: board.id, userId } },
+    });
+    if (!existing) {
+      await this.prisma.boardCollaborator.create({
+        data: { boardId: board.id, userId, role, addedById: userId },
+      });
+    } else if (role === 'EDITOR' && existing.role === 'VIEWER') {
+      await this.prisma.boardCollaborator.update({
+        where: { boardId_userId: { boardId: board.id, userId } },
+        data: { role: 'EDITOR' },
+      });
+    }
+
+    return { boardId: board.id };
+  }
+
+  async getInvitationByToken(token: string) {
+    const inv = await this.prisma.boardInvitation.findUnique({
+      where: { token },
+      include: { board: { select: { id: true, name: true } } },
+    });
+    if (!inv) throw new NotFoundException('Invitation not found');
+    if (inv.acceptedAt) throw new BadRequestException('Invitation already accepted');
+    if (inv.expiresAt < new Date()) throw new BadRequestException('Invitation expired');
+
+    return {
+      email: inv.email,
+      role: inv.role,
+      resourceType: 'board' as const,
+      resourceName: inv.board.name,
+      boardId: inv.board.id,
+      expiresAt: inv.expiresAt,
+    };
+  }
+
+  async acceptInvitationByToken(token: string, userId: string) {
+    const inv = await this.prisma.boardInvitation.findUnique({
+      where: { token },
+      include: { board: true },
+    });
+    if (!inv) throw new NotFoundException('Invitation not found');
+    if (inv.acceptedAt) throw new BadRequestException('Invitation already accepted');
+    if (inv.expiresAt < new Date()) throw new BadRequestException('Invitation expired');
+
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (user.email.toLowerCase() !== inv.email.toLowerCase()) {
+      throw new ForbiddenException('This invitation was sent to a different email');
+    }
+
+    const existing = await this.prisma.boardCollaborator.findUnique({
+      where: { boardId_userId: { boardId: inv.boardId, userId } },
+    });
+    if (!existing) {
+      await this.prisma.boardCollaborator.create({
+        data: { boardId: inv.boardId, userId, role: inv.role, addedById: inv.invitedById },
+      });
+    }
+
+    await this.prisma.boardInvitation.update({
+      where: { id: inv.id },
+      data: { acceptedAt: new Date() },
+    });
+
+    return { boardId: inv.boardId };
   }
 }
