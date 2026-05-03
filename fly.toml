@@ -3,7 +3,7 @@
 # then `fly deploy`. See DEPLOY_FLY.md.
 
 app = "focusflow-api"
-primary_region = "sin"   # Singapore — closest to Vietnam. Change if needed.
+primary_region = "syd"   # Sydney, Australia.
 
 [build]
   dockerfile = "Dockerfile"
