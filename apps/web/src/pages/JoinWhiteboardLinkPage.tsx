@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useJoinByLink } from '../features/whiteboard/hooks/useShare';
+import { useJoinByLink } from '../features/share/useShare';
 
 export function JoinWhiteboardLinkPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const join = useJoinByLink();
+  const join = useJoinByLink('whiteboard');
   const ranRef = useRef(false);
 
   useEffect(() => {
