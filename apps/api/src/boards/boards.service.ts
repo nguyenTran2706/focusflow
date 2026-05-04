@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AccessPolicyService } from '../billing/access-policy.service.js';
 import {
   CreateBoardDto,
   UpdateBoardDto,
@@ -42,6 +43,7 @@ export class BoardsService {
     private readonly pusher: PusherService,
     private readonly email: EmailService,
     private readonly config: ConfigService,
+    private readonly accessPolicy: AccessPolicyService,
   ) {}
 
   // ── Access ────────────────────────────────────────────────────────────────
@@ -59,7 +61,10 @@ export class BoardsService {
     const member = await this.prisma.membership.findUnique({
       where: { userId_workspaceId: { userId, workspaceId: board.workspaceId } },
     });
-    if (member) return { level: 'MANAGE', board };
+    if (member) {
+      await this.accessPolicy.assertWorkspaceAccessible(userId, board.workspaceId);
+      return { level: 'MANAGE', board };
+    }
 
     const collab = await this.prisma.boardCollaborator.findUnique({
       where: { boardId_userId: { boardId, userId } },
@@ -93,6 +98,7 @@ export class BoardsService {
       where: { userId_workspaceId: { userId, workspaceId } },
     });
     if (!m) throw new ForbiddenException('Not a member of this workspace');
+    await this.accessPolicy.assertWorkspaceAccessible(userId, workspaceId);
     return m;
   }
 
@@ -142,6 +148,7 @@ export class BoardsService {
 
   async getBoard(boardId: string, userId: string) {
     await this.assertBoardView(boardId, userId);
+    await this.accessPolicy.stampBoardAccess(boardId);
     const board = await this.prisma.board.findUnique({
       where: { id: boardId },
       include: {

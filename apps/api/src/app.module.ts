@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { BillingModule } from './billing/billing.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { WorkspacesModule } from './workspaces/workspaces.module.js';
 import { BoardsModule } from './boards/boards.module.js';
@@ -21,6 +22,7 @@ import { DiagramsModule } from './diagrams/diagrams.module.js';
       envFilePath: ['.env', '../../.env'],
     }),
     PrismaModule,
+    BillingModule,
     AuthModule,
     WorkspacesModule,
     BoardsModule,

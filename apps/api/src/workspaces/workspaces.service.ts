@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AccessPolicyService } from '../billing/access-policy.service.js';
 import { CreateWorkspaceDto, UpdateWorkspaceDto, InviteToWorkspaceDto } from './dto/index.js';
 
 const TIER_LIMITS = {
@@ -16,7 +17,10 @@ const TIER_LIMITS = {
 
 @Injectable()
 export class WorkspacesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly accessPolicy: AccessPolicyService,
+  ) {}
 
   private async getUserTier(userId: string) {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
@@ -64,18 +68,24 @@ export class WorkspacesService {
   // ── List workspaces for current user ──────────────────────────────────────
 
   async listForUser(userId: string) {
-    return this.prisma.workspace.findMany({
+    const workspaces = await this.prisma.workspace.findMany({
       where: {
         memberships: { some: { userId } },
       },
       include: {
         memberships: {
-          select: { role: true, userId: true },
+          select: { role: true, userId: true, lastAccessedAt: true },
         },
         _count: { select: { boards: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    const { ids, capped } = await this.accessPolicy.getAccessibleWorkspaceIds(userId);
+    return workspaces.map((w: any) => ({
+      ...w,
+      locked: capped && ids ? !ids.has(w.id) : false,
+    }));
   }
 
   // ── Get single workspace (with membership check) ─────────────────────────
@@ -95,6 +105,10 @@ export class WorkspacesService {
     if (!isMember) {
       throw new ForbiddenException('Not a member of this workspace');
     }
+
+    await this.accessPolicy.assertWorkspaceAccessible(userId, workspaceId);
+    await this.accessPolicy.stampWorkspaceAccess(userId, workspaceId);
+
     return workspace;
   }
 

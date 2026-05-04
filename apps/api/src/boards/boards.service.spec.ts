@@ -6,6 +6,7 @@ import { BoardsService } from './boards.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PusherService } from '../pusher/pusher.service.js';
 import { EmailService } from '../email/email.service.js';
+import { AccessPolicyService } from '../billing/access-policy.service.js';
 
 const mockPrisma = {
   membership: { findUnique: jest.fn() },
@@ -54,6 +55,13 @@ const mockConfig = {
   get: jest.fn().mockReturnValue('http://localhost:5173'),
 };
 
+const mockAccessPolicy = {
+  assertWorkspaceAccessible: jest.fn().mockResolvedValue(undefined),
+  stampWorkspaceAccess: jest.fn().mockResolvedValue(undefined),
+  stampBoardAccess: jest.fn().mockResolvedValue(undefined),
+  getAccessibleWorkspaceIds: jest.fn().mockResolvedValue({ ids: null, tier: 'PRO', capped: false }),
+};
+
 describe('BoardsService', () => {
   let service: BoardsService;
 
@@ -65,6 +73,7 @@ describe('BoardsService', () => {
         { provide: PusherService, useValue: mockPusher },
         { provide: EmailService, useValue: mockEmail },
         { provide: ConfigService, useValue: mockConfig },
+        { provide: AccessPolicyService, useValue: mockAccessPolicy },
       ],
     }).compile();
 

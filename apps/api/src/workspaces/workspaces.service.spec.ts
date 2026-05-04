@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, ConflictException, NotFoundException } from '@nestjs/common';
 import { WorkspacesService } from './workspaces.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AccessPolicyService } from '../billing/access-policy.service.js';
 
 const mockPrisma = {
   user: { findUniqueOrThrow: jest.fn(), findUnique: jest.fn() },
@@ -27,6 +28,13 @@ const mockPrisma = {
   board: { findMany: jest.fn() },
 };
 
+const mockAccessPolicy = {
+  assertWorkspaceAccessible: jest.fn().mockResolvedValue(undefined),
+  stampWorkspaceAccess: jest.fn().mockResolvedValue(undefined),
+  stampBoardAccess: jest.fn().mockResolvedValue(undefined),
+  getAccessibleWorkspaceIds: jest.fn().mockResolvedValue({ ids: null, tier: 'PRO', capped: false }),
+};
+
 describe('WorkspacesService', () => {
   let service: WorkspacesService;
 
@@ -35,6 +43,7 @@ describe('WorkspacesService', () => {
       providers: [
         WorkspacesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: AccessPolicyService, useValue: mockAccessPolicy },
       ],
     }).compile();
 

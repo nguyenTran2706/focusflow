@@ -12,6 +12,7 @@ interface Workspace {
   name: string;
   slug: string;
   plan: string;
+  locked?: boolean;
   _count?: { boards: number };
   memberships?: { role: string; userId: string }[];
 }
@@ -66,6 +67,7 @@ export function DashboardPage() {
   const [creating, setCreating] = useState(false);
   const [limits, setLimits] = useState<Limits | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [showLockedModal, setShowLockedModal] = useState(false);
   const dbUser = useAuthStore((s) => s.dbUser);
   const navigate = useNavigate();
 
@@ -239,17 +241,27 @@ export function DashboardPage() {
               {workspaces.map((ws, i) => (
                 <div
                   key={ws.id}
-                  className="cursor-pointer animate-fade-in bg-bg-card border border-border-subtle rounded-lg p-5 transition-all hover:bg-bg-card-hover hover:-translate-y-[1px] hover:shadow-lg"
+                  className={`relative cursor-pointer animate-fade-in bg-bg-card border border-border-subtle rounded-lg p-5 transition-all ${ws.locked ? 'opacity-60 hover:opacity-80' : 'hover:bg-bg-card-hover hover:-translate-y-[1px] hover:shadow-lg'}`}
                   style={{ animationDelay: `${i * 60}ms` }}
-                  onClick={() => navigate(`/workspaces/${ws.id}`)}
+                  onClick={() => ws.locked ? setShowLockedModal(true) : navigate(`/workspaces/${ws.id}`)}
                 >
+                  {ws.locked && (
+                    <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-[2px] rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.04em] bg-warning/10 text-warning">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                      Locked
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-[34px] h-[34px] rounded-md bg-accent flex items-center justify-center font-semibold text-[0.95rem] text-white">
                       {ws.name.charAt(0).toUpperCase()}
                     </div>
-                    <span className={`px-[8px] py-[2px] rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.04em] ${(dbUser?.subscription ?? 'FREE').toLowerCase() === 'free' ? 'bg-accent-subtle text-accent-light' : (dbUser?.subscription ?? 'FREE').toLowerCase() === 'pro' ? 'bg-[rgba(251,191,36,0.1)] text-warning' : 'bg-[rgba(52,211,153,0.1)] text-success'}`}>
-                      {dbUser?.subscription === 'PRO_MAX' ? 'Pro Max' : dbUser?.subscription ?? 'FREE'}
-                    </span>
+                    {!ws.locked && (
+                      <span className={`px-[8px] py-[2px] rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.04em] ${(dbUser?.subscription ?? 'FREE').toLowerCase() === 'free' ? 'bg-accent-subtle text-accent-light' : (dbUser?.subscription ?? 'FREE').toLowerCase() === 'pro' ? 'bg-[rgba(251,191,36,0.1)] text-warning' : 'bg-[rgba(52,211,153,0.1)] text-success'}`}>
+                        {dbUser?.subscription === 'PRO_MAX' ? 'Pro Max' : dbUser?.subscription ?? 'FREE'}
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-[0.95rem] mb-[2px]">{ws.name}</h3>
                   <p className="text-text-muted text-[0.8rem] mb-3">/{ws.slug}</p>
@@ -267,6 +279,38 @@ export function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* Locked workspace modal */}
+      <Modal open={showLockedModal} onClose={() => setShowLockedModal(false)} title="Workspace locked">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-md bg-warning/10 text-warning flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <p className="text-text-secondary text-[0.875rem] leading-relaxed">
+              This workspace is locked because your plan no longer covers it. On the Free plan you can access your 3 most-recently-used workspaces. Upgrade to Pro to unlock all of your workspaces and boards.
+            </p>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              className="px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium border border-border-subtle text-text-secondary hover:bg-bg-card-hover transition-colors"
+              onClick={() => setShowLockedModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
+              onClick={() => { setShowLockedModal(false); navigate('/pricing'); }}
+            >
+              Upgrade to Pro
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Create Workspace Modal */}
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('createModal.title')}>

@@ -27,7 +27,7 @@ import { BoardTabs } from '../components/BoardTabs';
 import { CardDetailPanel, PRIORITIES, LABEL_OPTIONS, TypeIcon } from '../components/CardDetailPanel';
 import { WorkspaceSummaryPage } from './WorkspaceSummaryPage';
 import { ShareModal } from '../features/share/ShareModal';
-import { api } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 import { useAuthStore } from '../lib/auth-store';
 import { formatPlanLabel } from '../lib/permissions';
 
@@ -389,7 +389,14 @@ export function WorkspacePage() {
     try {
       const data = await api.get<{ name: string; slug: string; plan: string }>(`/workspaces/${workspaceId}`);
       setWsName(data.name); setWsSlug(data.slug);
-    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to load workspace'); }
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'WORKSPACE_LOCKED_DOWNGRADE') {
+        toast.error('This workspace is locked. Upgrade to Pro to unlock it.');
+        navigate('/dashboard');
+        return;
+      }
+      toast.error(err instanceof Error ? err.message : 'Failed to load workspace');
+    }
   };
 
   const fetchBoards = async () => {

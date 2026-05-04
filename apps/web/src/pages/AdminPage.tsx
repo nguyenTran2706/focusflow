@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Sidebar } from '../components/Sidebar';
 import { TopNav } from '../components/TopNav';
+import { Modal } from '../components/Modal';
 import { useAuthStore } from '../lib/auth-store';
 import { api } from '../lib/api';
 import { useChatNotifications } from '../lib/chat-notifications';
@@ -190,11 +191,15 @@ function OverviewTab() {
 // ── Users Tab ─────────────────────────────────────────────────────────────
 
 function UsersTab() {
+  const dbUser = useAuthStore((s) => s.dbUser);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -212,6 +217,37 @@ function UsersTab() {
       setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...updated } : u)));
       toast.success('User updated');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to update user'); }
+  };
+
+  const openDelete = (user: UserRow) => {
+    setDeleteTarget(user);
+    setDeleteConfirm('');
+  };
+
+  const closeDelete = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteConfirm('');
+  };
+
+  const confirmLabel = deleteTarget?.email || deleteTarget?.name || '';
+  const canDelete = !!deleteTarget && deleteConfirm.trim() === confirmLabel.trim() && !deleting;
+
+  const performDelete = async () => {
+    if (!deleteTarget || !canDelete) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/admin/users/${deleteTarget.id}`);
+      setUsers((prev) => prev.filter((u) => u.id !== deleteTarget.id));
+      setTotal((t) => Math.max(0, t - 1));
+      toast.success(`Deleted ${deleteTarget.name || deleteTarget.email}`);
+      setDeleteTarget(null);
+      setDeleteConfirm('');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete user');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const totalPages = Math.ceil(total / 15);
@@ -284,9 +320,24 @@ function UsersTab() {
                     {new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-[0.7rem] px-2 py-0.5 rounded-full font-semibold" style={{ color: SUB_COLORS[u.subscription], background: `${SUB_COLORS[u.subscription]}15` }}>
-                      {u.subscription === 'PRO_MAX' ? 'Pro Max' : u.subscription.charAt(0) + u.subscription.slice(1).toLowerCase()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[0.7rem] px-2 py-0.5 rounded-full font-semibold" style={{ color: SUB_COLORS[u.subscription], background: `${SUB_COLORS[u.subscription]}15` }}>
+                        {u.subscription === 'PRO_MAX' ? 'Pro Max' : u.subscription.charAt(0) + u.subscription.slice(1).toLowerCase()}
+                      </span>
+                      <button
+                        onClick={() => openDelete(u)}
+                        disabled={u.id === dbUser?.id}
+                        title={u.id === dbUser?.id ? 'You cannot delete your own admin account' : 'Delete user'}
+                        className="w-8 h-8 rounded-md flex items-center justify-center text-text-muted hover:text-danger hover:bg-danger/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          <line x1="10" y1="11" x2="10" y2="17" />
+                          <line x1="14" y1="11" x2="14" y2="17" />
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -314,6 +365,66 @@ function UsersTab() {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation modal */}
+      <Modal open={!!deleteTarget} onClose={closeDelete} title="Delete user account">
+        {deleteTarget && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-md bg-danger/10 text-danger flex items-center justify-center shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[0.875rem] text-text-primary font-medium mb-1">
+                  This action cannot be undone.
+                </p>
+                <p className="text-[0.8rem] text-text-secondary leading-relaxed">
+                  Permanently delete <span className="font-semibold text-text-primary">{deleteTarget.name}</span>{deleteTarget.email && <> ({deleteTarget.email})</>}? Their workspace memberships and personal data will be removed. Workspaces they share with others will remain.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="delete-confirm-input" className="text-[0.75rem] text-text-secondary">
+                Type <span className="font-mono font-semibold text-text-primary">{confirmLabel}</span> to confirm
+              </label>
+              <input
+                id="delete-confirm-input"
+                type="text"
+                className="px-3 py-2 rounded-md border border-border-subtle bg-bg-input text-text-primary text-[0.85rem] outline-none focus:border-danger transition-colors placeholder:text-text-muted"
+                placeholder={confirmLabel}
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                autoFocus
+                disabled={deleting}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={closeDelete}
+                disabled={deleting}
+                className="px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium border border-border-subtle text-text-secondary hover:bg-bg-card-hover transition-colors disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={performDelete}
+                disabled={!canDelete}
+                className="px-[14px] py-[8px] rounded-md text-[0.875rem] font-medium bg-danger text-white hover:bg-danger/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Deleting…' : 'Delete account'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

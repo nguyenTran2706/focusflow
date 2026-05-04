@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Post,
   Patch,
   Delete,
+  NotFoundException,
   Param,
   Body,
   Query,
@@ -99,6 +101,32 @@ export class AdminController {
       },
       select: { id: true, email: true, name: true, role: true, subscription: true },
     });
+  }
+
+  @Delete('users/:id')
+  async deleteUser(
+    @Param('id') id: string,
+    @CurrentUser() admin: { userId: string },
+  ) {
+    if (id === admin.userId) {
+      throw new BadRequestException('You cannot delete your own admin account.');
+    }
+
+    const target = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, email: true },
+    });
+    if (!target) throw new NotFoundException('User not found');
+
+    if (target.role === 'ADMIN') {
+      const adminCount = await this.prisma.user.count({ where: { role: 'ADMIN' } });
+      if (adminCount <= 1) {
+        throw new BadRequestException('Cannot delete the last remaining admin.');
+      }
+    }
+
+    await this.prisma.user.delete({ where: { id } });
+    return { deleted: true, email: target.email };
   }
 
   // ─── FAQ Management ───────────────────────────────────────────────

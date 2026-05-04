@@ -83,17 +83,19 @@ enum Plan {
 }
 
 model Membership {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
-  workspaceId String   @db.ObjectId
-  role        Role     @default(MEMBER)
-  createdAt   DateTime @default(now())
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @db.ObjectId
+  workspaceId    String   @db.ObjectId
+  role           Role     @default(MEMBER)
+  createdAt      DateTime @default(now())
+  lastAccessedAt DateTime @default(now())
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, workspaceId])
   @@index([workspaceId])
+  @@index([userId, lastAccessedAt])
 }
 
 enum Role {
@@ -130,6 +132,7 @@ model Board {
   linkToken   String   @unique @default(cuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  lastAccessedAt DateTime @default(now())
 
   workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   columns     BoardColumn[]

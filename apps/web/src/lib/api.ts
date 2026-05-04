@@ -10,9 +10,11 @@ export function setTokenGetter(fn: () => Promise<string | null>) {
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -33,7 +35,12 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ message: res.statusText }));
-    throw new ApiError(res.status, body.message ?? 'Request failed');
+    // Nest ForbiddenException with object payload nests fields under message
+    const code = body.code ?? body.message?.code;
+    const message = typeof body.message === 'string'
+      ? body.message
+      : body.message?.message ?? 'Request failed';
+    throw new ApiError(res.status, message, code);
   }
 
   if (res.status === 204) return undefined as T;
