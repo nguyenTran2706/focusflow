@@ -22,7 +22,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-bg-root text-text-primary overflow-x-hidden">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-8 py-5 max-w-[1200px] mx-auto">
+      <nav className="flex items-center justify-between gap-2 px-4 sm:px-6 md:px-8 py-4 sm:py-5 max-w-[1200px] mx-auto">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-[#a855f7] flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
@@ -31,7 +31,7 @@ export function LandingPage() {
           </div>
           <span className="text-[1.1rem] font-bold tracking-tight">FocusFlow</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           {/* Language switcher */}
           <div className="relative">
             <button
@@ -60,13 +60,13 @@ export function LandingPage() {
             )}
           </div>
           <button
-            className="px-4 py-2 rounded-md text-[0.85rem] font-medium text-text-secondary hover:text-text-primary hover:bg-white/10 transition-colors"
+            className="px-2 sm:px-4 py-2 rounded-md text-[0.8rem] sm:text-[0.85rem] font-medium text-text-secondary hover:text-text-primary hover:bg-white/10 transition-colors whitespace-nowrap"
             onClick={() => navigate('/sign-in')}
           >
             {tc('nav.signIn')}
           </button>
           <button
-            className="px-5 py-2 rounded-md text-[0.85rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors"
+            className="px-3 sm:px-5 py-2 rounded-md text-[0.8rem] sm:text-[0.85rem] font-medium bg-accent text-white hover:bg-[#5558e6] transition-colors whitespace-nowrap"
             onClick={() => navigate('/sign-up')}
           >
             {tc('nav.getStarted')}
@@ -75,13 +75,13 @@ export function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-[1200px] mx-auto px-8 pt-16 pb-20 text-center">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-16 pb-12 sm:pb-20 text-center">
         <div className="animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent-light text-[0.75rem] font-medium mb-6">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
             {tl('hero.badge')}
           </div>
-          <h1 className="text-[3rem] md:text-[3.5rem] font-bold leading-[1.1] mb-6 tracking-tight">
+          <h1 className="text-[2rem] sm:text-[2.5rem] md:text-[3.5rem] font-bold leading-[1.1] mb-4 sm:mb-6 tracking-tight">
             {tl('hero.titleLine1')}
             <br />
             <span className="bg-gradient-to-r from-accent via-[#a855f7] to-[#ec4899] bg-clip-text text-transparent">
@@ -91,15 +91,15 @@ export function LandingPage() {
           <p className="text-text-secondary text-[1.05rem] max-w-[560px] mx-auto mb-10 leading-relaxed">
             {tl('hero.subtitle')}
           </p>
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
             <button
-              className="px-7 py-3.5 rounded-xl text-[0.95rem] font-semibold bg-gradient-to-r from-accent to-[#a855f7] text-white hover:brightness-110 transition-all shadow-lg shadow-accent/25"
+              className="px-6 sm:px-7 py-3.5 rounded-xl text-[0.95rem] font-semibold bg-gradient-to-r from-accent to-[#a855f7] text-white hover:brightness-110 transition-all shadow-lg shadow-accent/25"
               onClick={() => navigate('/sign-up')}
             >
               {tl('hero.cta')}
             </button>
             <button
-              className="px-7 py-3.5 rounded-xl text-[0.95rem] font-medium text-text-secondary border border-border-subtle hover:bg-white/[0.06] transition-colors"
+              className="px-6 sm:px-7 py-3.5 rounded-xl text-[0.95rem] font-medium text-text-secondary border border-border-subtle hover:bg-white/[0.06] transition-colors"
               onClick={() => navigate('/pricing')}
             >
               {tc('actions.viewPlans')}
@@ -108,9 +108,9 @@ export function LandingPage() {
         </div>
 
         {/* Hero visual placeholder */}
-        <div className="mt-16 mx-auto max-w-[900px] rounded-2xl border border-border-subtle bg-bg-card/50 p-1 shadow-2xl animate-fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="rounded-xl bg-gradient-to-br from-bg-card to-bg-root p-8 min-h-[320px] flex items-center justify-center">
-            <div className="grid grid-cols-4 gap-3 w-full max-w-[700px]">
+        <div className="mt-10 sm:mt-16 mx-auto max-w-[900px] rounded-2xl border border-border-subtle bg-bg-card/50 p-1 shadow-2xl animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <div className="rounded-xl bg-gradient-to-br from-bg-card to-bg-root p-3 sm:p-6 md:p-8 min-h-[240px] sm:min-h-[320px] flex items-center justify-center">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3 w-full max-w-[700px]">
               {(['kanbanDemo.todo', 'kanbanDemo.inProgress', 'kanbanDemo.review', 'kanbanDemo.done'] as const).map((colKey, i) => (
                 <div key={colKey} className="flex flex-col gap-2 animate-fade-in" style={{ animationDelay: `${300 + i * 100}ms` }}>
                   <div className="text-[0.72rem] font-semibold text-text-muted uppercase tracking-wider mb-1">{tl(colKey)}</div>
@@ -132,7 +132,7 @@ export function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="max-w-[1200px] mx-auto px-8 py-20">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20">
         <div className="text-center mb-14">
           <h2 className="text-[2rem] font-bold mb-3">{tl('features.heading')}</h2>
           <p className="text-text-secondary text-[0.95rem] max-w-[480px] mx-auto">
@@ -159,8 +159,8 @@ export function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-[1200px] mx-auto px-8 py-20">
-        <div className="bg-gradient-to-br from-accent/10 via-bg-card to-[#a855f7]/10 border border-border-subtle rounded-2xl p-12 text-center">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20">
+        <div className="bg-gradient-to-br from-accent/10 via-bg-card to-[#a855f7]/10 border border-border-subtle rounded-2xl p-6 sm:p-8 md:p-12 text-center">
           <h2 className="text-[1.8rem] font-bold mb-3">{tl('cta.heading')}</h2>
           <p className="text-text-secondary text-[0.95rem] max-w-[420px] mx-auto mb-8">
             {tl('cta.subtitle')}
@@ -175,7 +175,7 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border-subtle py-8 px-8 max-w-[1200px] mx-auto flex items-center justify-between">
+      <footer className="border-t border-border-subtle py-6 sm:py-8 px-4 sm:px-6 md:px-8 max-w-[1200px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-text-muted text-[0.8rem]">
           <div className="w-5 h-5 rounded bg-gradient-to-br from-accent to-[#a855f7] flex items-center justify-center">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round">

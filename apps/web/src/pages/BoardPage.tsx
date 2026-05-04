@@ -439,7 +439,7 @@ export function WorkspacePage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
           title={wsName || 'Workspace'}
           subtitle={wsSlug ? `/${wsSlug} · ${planLabel}` : ''}
@@ -485,7 +485,7 @@ export function WorkspacePage() {
           <WorkspaceSummaryPage workspaceId={workspaceId!} />
         ) : activeTab === 'settings' ? (
           /* ═══ Settings tab ═══ */
-          <div className="flex-1 p-6 max-w-[600px]">
+          <div className="flex-1 p-3 sm:p-4 md:p-6 max-w-[600px]">
             <h3 className="text-[1rem] font-semibold text-text-primary mb-6">Workspace Settings</h3>
 
             {/* Rename */}
@@ -541,7 +541,7 @@ export function WorkspacePage() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-3 sm:p-4 md:p-6">
             {loading ? (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
                 {[1, 2, 3].map(i => <div key={i} className="h-[150px] rounded-lg bg-bg-card border border-border-subtle animate-[pulse_1.5s_ease_infinite]" />)}
@@ -624,7 +624,9 @@ export function BoardPage() {
   const navigate = useNavigate();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    // activation distance: 8px so a phone tap-to-scroll doesn't trigger drag, but
+    // a deliberate press-and-move does. Press-delay would block scrolling entirely.
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
 
   const fetchBoard = async () => {
@@ -886,9 +888,9 @@ export function BoardPage() {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+        <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
           <TopNav title="Loading..." />
-          <div className="flex-1 p-6 flex gap-4 overflow-hidden">
+          <div className="flex-1 p-3 sm:p-4 md:p-6 flex gap-4 overflow-hidden">
             {[1, 2, 3].map(i => (
               <div key={i} className="w-[290px] shrink-0 flex flex-col gap-3">
                 <div className="h-4 w-24 rounded bg-bg-surface animate-[pulse_1.5s_ease_infinite]" />
@@ -904,7 +906,7 @@ export function BoardPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
           title={editingBoardName ? '' : (board?.name ?? 'Board')}
           subtitle={editingBoardName ? '' : `${board?.columns.length ?? 0} columns · ${totalCards} cards`}
@@ -1043,7 +1045,7 @@ export function BoardPage() {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex-1 flex gap-4 p-6 overflow-x-auto overflow-y-hidden items-start">
+          <div className="flex-1 flex gap-3 sm:gap-4 p-3 sm:p-4 md:p-6 overflow-x-auto overflow-y-hidden items-start">
             <SortableContext items={filteredBoard?.columns.map(c => `column-${c.id}`) ?? []} strategy={horizontalListSortingStrategy}>
             {filteredBoard?.columns.map((col) => (
               <DroppableColumn

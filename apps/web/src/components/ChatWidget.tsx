@@ -32,6 +32,23 @@ export function ChatWidget() {
   const pusherRef = useRef<Pusher | null>(null);
   const themeMode = useThemeStore((s) => s.mode);
   const isDark = getEffectiveTheme(themeMode) === 'dark';
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const formatMsgTime = (iso: string) => {
+    const d = new Date(iso);
+    const today = new Date();
+    const sameDay =
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate();
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return sameDay ? time : `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })} · ${time}`;
+  };
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,6 +60,12 @@ export function ChatWidget() {
       setUnreadCount(0);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (open && !sending) {
+      inputRef.current?.focus();
+    }
+  }, [sending, open]);
 
   // ── Fetch or create chat on first open ──────────────────────────────────
   useEffect(() => {
@@ -308,12 +331,18 @@ export function ChatWidget() {
             </div>
             <div className="flex-1">
               <h4 className="text-[0.9rem] font-semibold" style={{ color: titleColor }}>FocusFlow Support</h4>
-              <p className="text-[0.7rem]" style={{ color: subtitleColor }}>
-                {status === 'WAITING_HUMAN'
-                  ? 'Waiting for an agent…'
-                  : status === 'HUMAN'
-                    ? 'Connected to support'
-                    : 'AI-powered assistant'}
+              <p className="text-[0.7rem] flex items-center gap-1.5" style={{ color: subtitleColor }}>
+                <span>
+                  {status === 'WAITING_HUMAN'
+                    ? 'Waiting for an agent…'
+                    : status === 'HUMAN'
+                      ? 'Connected to support'
+                      : 'AI-powered assistant'}
+                </span>
+                <span style={{ opacity: 0.5 }}>·</span>
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
               </p>
             </div>
             {status === 'BOT' ? (
@@ -375,7 +404,7 @@ export function ChatWidget() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.senderRole === 'USER' ? 'justify-end' : 'justify-start'}`}
+                className={`flex flex-col ${msg.senderRole === 'USER' ? 'items-end' : 'items-start'}`}
               >
                 <div
                   className="max-w-[80%] px-3.5 py-2.5 rounded-2xl text-[0.82rem] leading-relaxed"
@@ -403,6 +432,12 @@ export function ChatWidget() {
                   )}
                   {msg.body}
                 </div>
+                <span
+                  className="text-[0.62rem] mt-1 px-1"
+                  style={{ color: emptySubColor, fontVariantNumeric: 'tabular-nums' }}
+                >
+                  {formatMsgTime(msg.createdAt)}
+                </span>
               </div>
             ))}
             {sending && (

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { UserButton } from '@clerk/clerk-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../lib/auth-store';
 import { useThemeStore, type ThemeMode } from '../lib/theme-store';
+import { useSidebarStore } from '../lib/sidebar-store';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useChatNotifications, initAdminChatListener } from '../lib/chat-notifications';
 
@@ -49,13 +50,41 @@ export function Sidebar() {
   const { mode, setMode } = useThemeStore();
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const adminUnread = useChatNotifications((s) => s.adminUnread);
+  const open = useSidebarStore((s) => s.open);
+  const close = useSidebarStore((s) => s.close);
+  const location = useLocation();
 
   useEffect(() => {
     if (dbUser?.role === 'ADMIN') initAdminChatListener();
   }, [dbUser?.role]);
 
+  // Close drawer on route change (mobile nav-link click)
+  useEffect(() => { close(); }, [location.pathname, close]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open, close]);
+
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[var(--spacing-sidebar)] flex flex-col p-4 z-[100] bg-bg-surface border-r border-border-subtle">
+    <>
+      {/* Backdrop — only visible below md when drawer is open */}
+      <div
+        className={`fixed inset-0 z-[99] bg-black/50 backdrop-blur-sm md:hidden transition-opacity ${
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={close}
+        aria-hidden="true"
+      />
+
+      <aside
+        className={`fixed left-0 top-0 bottom-0 w-[var(--spacing-sidebar)] flex flex-col p-4 z-[100] bg-bg-surface border-r border-border-subtle transition-transform duration-200 ease-out md:translate-x-0 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
       {/* Logo */}
       <NavLink
         to="/dashboard"
@@ -181,6 +210,7 @@ export function Sidebar() {
           <span className="text-[0.7rem] text-text-muted truncate">{dbUser?.email ?? ''}</span>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

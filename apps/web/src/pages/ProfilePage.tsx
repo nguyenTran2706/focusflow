@@ -165,7 +165,7 @@ export function ProfilePage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
           title={t('title')}
           actions={
@@ -185,7 +185,7 @@ export function ProfilePage() {
           }
         />
 
-        <div className="flex-1 p-6 max-w-[720px]">
+        <div className="flex-1 p-3 sm:p-4 md:p-6 max-w-[720px]">
           {/* Checkout pending banner */}
           {checkoutPending && (
             <div className="flex items-center gap-3 mb-6 px-4 py-3 rounded-xl border border-accent/30 bg-accent/5 animate-fade-in">

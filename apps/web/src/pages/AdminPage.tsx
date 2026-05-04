@@ -82,16 +82,16 @@ export function AdminPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav title={t('title')} />
 
         {/* Tab bar */}
-        <div className="flex gap-1 px-6 pt-4 border-b border-border-subtle">
+        <div className="flex gap-1 px-3 sm:px-4 md:px-6 pt-4 border-b border-border-subtle overflow-x-auto">
           {TABS.map((tabItem) => (
             <button
               key={tabItem.key}
               onClick={() => setTab(tabItem.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-[0.82rem] font-medium rounded-t-lg border-b-2 transition-colors ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 text-[0.82rem] font-medium rounded-t-lg border-b-2 transition-colors whitespace-nowrap ${
                 tab === tabItem.key
                   ? 'border-accent text-accent-light bg-accent-subtle'
                   : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.12]'
@@ -105,7 +105,7 @@ export function AdminPage() {
           ))}
         </div>
 
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto">
           {tab === 'overview' && <OverviewTab />}
           {tab === 'users' && <UsersTab />}
           {tab === 'faq' && <FaqTab />}
@@ -127,7 +127,7 @@ function OverviewTab() {
 
   if (!stats) {
     return (
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="h-[120px] rounded-xl bg-bg-card border border-border-subtle animate-[pulse_1.5s_ease_infinite]" />
         ))}
@@ -144,7 +144,7 @@ function OverviewTab() {
 
   return (
     <div className="animate-fade-in">
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
         {cards.map((c, i) => (
           <div key={i} className="rounded-xl bg-bg-card border border-border-subtle p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between">
@@ -163,7 +163,7 @@ function OverviewTab() {
       {/* Subscription breakdown */}
       <div className="rounded-xl bg-bg-card border border-border-subtle p-5">
         <h3 className="text-[0.85rem] font-semibold text-text-primary mb-4">Subscription Breakdown</h3>
-        <div className="flex gap-6">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
           {(['FREE', 'PRO', 'PRO_MAX'] as const).map((tier) => {
             const count = stats.subscriptions[tier];
             const pct = stats.totalUsers > 0 ? Math.round((count / stats.totalUsers) * 100) : 0;
@@ -265,8 +265,8 @@ function UsersTab() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-border-subtle overflow-hidden">
-        <table className="w-full">
+      <div className="rounded-xl border border-border-subtle overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="bg-bg-surface text-text-muted text-[0.7rem] uppercase tracking-wider">
               <th className="text-left px-4 py-3 font-semibold">User</th>
@@ -568,6 +568,7 @@ function ChatsTab() {
   const [sending, setSending] = useState(false);
   const [clearing, setClearing] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const replyInputRef = useRef<HTMLInputElement>(null);
   const selectedChatRef = useRef<string | null>(null);
   selectedChatRef.current = selectedChat;
 
@@ -583,6 +584,13 @@ function ChatsTab() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Refocus reply input after sending completes or chat is selected
+  useEffect(() => {
+    if (selectedChat && !sending) {
+      replyInputRef.current?.focus();
+    }
+  }, [sending, selectedChat]);
 
   // ── Pusher: Real-time updates for the selected chat ──────────────────
   useEffect(() => {
@@ -684,9 +692,9 @@ function ChatsTab() {
   };
 
   return (
-    <div className="animate-fade-in flex gap-4 h-[calc(100vh-180px)]">
+    <div className="animate-fade-in flex flex-col md:flex-row gap-4 h-[calc(100vh-180px)] min-h-[480px]">
       {/* Chat list */}
-      <div className="w-[320px] shrink-0 rounded-xl border border-border-subtle overflow-hidden flex flex-col bg-bg-card">
+      <div className="w-full md:w-[320px] shrink-0 max-h-[40vh] md:max-h-none rounded-xl border border-border-subtle overflow-hidden flex flex-col bg-bg-card">
         <div className="px-4 py-3 border-b border-border-subtle">
           <h3 className="text-[0.85rem] font-semibold text-text-primary">Active Chats ({chats.length})</h3>
         </div>
@@ -757,34 +765,52 @@ function ChatsTab() {
                   No messages yet — the chat has been cleared.
                 </div>
               )}
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.senderRole === 'USER' ? 'justify-start' : 'justify-end'}`}>
-                  <div
-                    className={`max-w-[70%] px-3.5 py-2.5 rounded-2xl text-[0.82rem] leading-relaxed ${
-                      msg.senderRole === 'USER'
-                        ? 'bg-bg-surface text-text-primary border border-border-subtle'
-                        : msg.senderRole === 'ADMIN'
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
-                    }`}
-                    style={{
-                      borderBottomLeftRadius: msg.senderRole === 'USER' ? '6px' : undefined,
-                      borderBottomRightRadius: msg.senderRole !== 'USER' ? '6px' : undefined,
-                    }}
-                  >
-                    <span className="text-[0.6rem] font-bold uppercase tracking-wider block mb-1 opacity-60">
-                      {msg.senderRole === 'USER' ? 'Customer' : msg.senderRole === 'ADMIN' ? 'You' : 'Bot'}
+              {messages.map((msg) => {
+                const d = new Date(msg.createdAt);
+                const today = new Date();
+                const sameDay =
+                  d.getFullYear() === today.getFullYear() &&
+                  d.getMonth() === today.getMonth() &&
+                  d.getDate() === today.getDate();
+                const stamp = sameDay
+                  ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : `${d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })} · ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+                return (
+                  <div key={msg.id} className={`flex flex-col ${msg.senderRole === 'USER' ? 'items-start' : 'items-end'}`}>
+                    <div
+                      className={`max-w-[70%] px-3.5 py-2.5 rounded-2xl text-[0.82rem] leading-relaxed ${
+                        msg.senderRole === 'USER'
+                          ? 'bg-bg-surface text-text-primary border border-border-subtle'
+                          : msg.senderRole === 'ADMIN'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                      }`}
+                      style={{
+                        borderBottomLeftRadius: msg.senderRole === 'USER' ? '6px' : undefined,
+                        borderBottomRightRadius: msg.senderRole !== 'USER' ? '6px' : undefined,
+                      }}
+                    >
+                      <span className="text-[0.6rem] font-bold uppercase tracking-wider block mb-1 opacity-60">
+                        {msg.senderRole === 'USER' ? 'Customer' : msg.senderRole === 'ADMIN' ? 'You' : 'Bot'}
+                      </span>
+                      {msg.body}
+                    </div>
+                    <span
+                      className="text-[0.62rem] mt-1 px-1 text-text-muted"
+                      style={{ fontVariantNumeric: 'tabular-nums' }}
+                    >
+                      {stamp}
                     </span>
-                    {msg.body}
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={endRef} />
             </div>
 
             {/* Reply input */}
             <div className="px-4 py-3 border-t border-border-subtle flex gap-2">
               <input
+                ref={replyInputRef}
                 className="flex-1 bg-bg-input border border-border-subtle rounded-lg px-4 py-2.5 text-[0.82rem] text-text-primary outline-none placeholder:text-text-muted focus:border-border-focus transition-colors"
                 placeholder="Type a reply…"
                 value={reply}

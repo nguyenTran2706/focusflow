@@ -340,9 +340,9 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
           </div>
         ) : card ? (
           <div className="flex-1 overflow-y-auto">
-            <div className="flex gap-0 min-h-full">
-              {/* ═══ LEFT COLUMN (60%) ═══ */}
-              <div className="flex-[3] p-6 flex flex-col gap-5 border-r border-border-subtle min-w-0">
+            <div className="flex flex-col md:flex-row gap-0 min-h-full">
+              {/* ═══ LEFT COLUMN (60% on desktop, full on phone) ═══ */}
+              <div className="flex-[3] p-4 sm:p-5 md:p-6 flex flex-col gap-5 border-b md:border-b-0 md:border-r border-border-subtle min-w-0">
                 {/* Title */}
                 {editingTitle ? (
                   <textarea
@@ -500,8 +500,8 @@ export function CardDetailPanel({ cardId, columnName, columns, workspaceId, onCl
                 </div>
               </div>
 
-              {/* ═══ RIGHT COLUMN — Details Sidebar (40%) ═══ */}
-              <div className="flex-[2] p-5 flex flex-col gap-4 min-w-[260px]">
+              {/* ═══ RIGHT COLUMN — Details Sidebar (40% on desktop, full on phone) ═══ */}
+              <div className="flex-[2] p-4 sm:p-5 flex flex-col gap-4 md:min-w-[260px]">
                 <h3 className="text-[0.8rem] font-bold text-text-muted uppercase tracking-wide">Details</h3>
 
                 {/* Status */}

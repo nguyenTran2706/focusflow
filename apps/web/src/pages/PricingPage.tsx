@@ -96,9 +96,9 @@ export function PricingPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav title={t('title')} />
-        <div className="flex-1 p-6 flex flex-col items-center">
+        <div className="flex-1 p-3 sm:p-4 md:p-6 flex flex-col items-center">
           {/* Header */}
           <div className="text-center mb-10 animate-fade-in">
             <h1 className="text-[2rem] font-bold text-text-primary mb-3">

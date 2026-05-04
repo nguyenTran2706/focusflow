@@ -968,7 +968,7 @@ function DiagramEditor() {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 ml-[var(--spacing-sidebar)] flex items-center justify-center min-h-screen">
+        <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex items-center justify-center min-h-screen">
           <div className="text-text-muted text-[0.875rem]">Loading diagram...</div>
         </main>
       </div>
@@ -984,7 +984,7 @@ function DiagramEditor() {
     <div className="flex min-h-screen">
       <Sidebar />
       <EdgeMarkerDefs />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen h-screen">
         {/* ── Header bar ─────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-border-subtle bg-bg-root">
           <div className="flex items-center gap-3">

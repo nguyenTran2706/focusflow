@@ -606,7 +606,7 @@ export function ScrumPage() {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+        <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
           <TopNav title="Scrum Board" />
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-[420px] px-8">
@@ -640,9 +640,9 @@ export function ScrumPage() {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+        <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
           <TopNav title="Loading..." />
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-3 sm:p-4 md:p-6">
             <div className="grid grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-[300px] rounded-xl bg-bg-surface border border-border-subtle animate-[pulse_1.5s_ease_infinite]" />
@@ -663,7 +663,7 @@ export function ScrumPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
           title={`Scrum · ${board?.name ?? 'Board'}`}
           subtitle={

@@ -143,7 +143,7 @@ export function DashboardPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav
           title={t('title')}
           subtitle={`${workspaces.length}${limits ? `/${limits.limits.workspaces}` : ''} workspace${workspaces.length !== 1 ? 's' : ''}${limits ? ` · ${limits.tier} plan` : ''}`}
@@ -167,16 +167,16 @@ export function DashboardPage() {
           }
         />
 
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-3 sm:p-4 md:p-6">
           {/* Greeting */}
           <div className="mb-6 animate-fade-in">
-            <h2 className="text-[1.4rem] font-bold text-text-primary">{greeting}, {dbUser?.name?.split(' ')[0] ?? 'there'} 👋</h2>
-            <p className="text-text-secondary text-[0.85rem] mt-1">{t('whatsHappening')}</p>
+            <h2 className="text-[1.2rem] sm:text-[1.4rem] font-bold text-text-primary">{greeting}, {dbUser?.name?.split(' ')[0] ?? 'there'} 👋</h2>
+            <p className="text-text-secondary text-[0.8rem] sm:text-[0.85rem] mt-1">{t('whatsHappening')}</p>
           </div>
 
           {/* Stats Cards */}
           {!loading && stats && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
               <StatCard
                 icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></svg>}
                 label={t('stats.totalBoards')}
@@ -237,7 +237,7 @@ export function DashboardPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4 animate-fade-in">
+            <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3 sm:gap-4 animate-fade-in">
               {workspaces.map((ws, i) => (
                 <div
                   key={ws.id}

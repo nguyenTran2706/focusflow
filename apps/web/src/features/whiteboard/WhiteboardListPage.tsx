@@ -60,7 +60,7 @@ export function WhiteboardListPage() {
     return (
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+        <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
           <TopNav title={t('list.title')} />
           {boardId && <BoardTabs boardId={boardId} />}
           <div className="flex-1 flex items-center justify-center">
@@ -91,7 +91,7 @@ export function WhiteboardListPage() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
+      <main className="flex-1 ml-0 md:ml-[var(--spacing-sidebar)] flex flex-col min-h-screen">
         <TopNav title={t('list.title')} />
         {boardId && <BoardTabs boardId={boardId} />}
         {isLoading ? (
