@@ -788,6 +788,9 @@ function ChatsTab() {
                       style={{
                         borderBottomLeftRadius: msg.senderRole === 'USER' ? '6px' : undefined,
                         borderBottomRightRadius: msg.senderRole !== 'USER' ? '6px' : undefined,
+                        whiteSpace: 'pre-wrap',
+                        overflowWrap: 'anywhere',
+                        wordBreak: 'break-word',
                       }}
                     >
                       <span className="text-[0.6rem] font-bold uppercase tracking-wider block mb-1 opacity-60">

@@ -423,6 +423,9 @@ export function ChatWidget() {
                           : botBubbleText,
                     borderBottomRightRadius: msg.senderRole === 'USER' ? '6px' : undefined,
                     borderBottomLeftRadius: msg.senderRole !== 'USER' ? '6px' : undefined,
+                    whiteSpace: 'pre-wrap',
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word',
                   }}
                 >
                   {msg.senderRole === 'ADMIN' && (
