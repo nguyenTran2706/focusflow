@@ -28,6 +28,10 @@ import {
   getStraightPath,
   getSmoothStepPath,
   type EdgeProps,
+  ConnectionLineType,
+  ConnectionMode,
+  MarkerType,
+  type EdgeMarker,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { toast } from 'sonner';
@@ -55,47 +59,46 @@ function getEdgeStyle(arrowType: ArrowType, weight: LineWeight = 2): React.CSSPr
   return base;
 }
 
-function getMarkerEnd(arrowType: ArrowType): string {
-  if (arrowType === 'none') return '';
-  if (arrowType === 'open-arrow') return 'url(#open-arrow)';
+const MARKER_COLOR = '#6b6f85';
+
+function getMarkerEnd(arrowType: ArrowType): EdgeMarker | string | undefined {
+  if (arrowType === 'none') return undefined;
+  if (arrowType === 'open-arrow') return { type: MarkerType.Arrow, color: MARKER_COLOR, width: 18, height: 18 };
   if (arrowType === 'erd-1-1') return 'url(#erd-one)';
   if (arrowType === 'erd-1-n') return 'url(#erd-many)';
   if (arrowType === 'erd-n-m') return 'url(#erd-many)';
-  return 'url(#arrow)';
+  // arrow, dashed, dotted, bidirectional → filled arrow at end
+  return { type: MarkerType.ArrowClosed, color: MARKER_COLOR, width: 18, height: 18 };
 }
 
-function getMarkerStart(arrowType: ArrowType): string {
-  if (arrowType === 'bidirectional') return 'url(#arrow-rev)';
+function getMarkerStart(arrowType: ArrowType): EdgeMarker | string | undefined {
+  if (arrowType === 'bidirectional') return { type: MarkerType.ArrowClosed, color: MARKER_COLOR, width: 18, height: 18 };
   if (arrowType === 'erd-n-m') return 'url(#erd-many-rev)';
   if (arrowType === 'erd-1-1') return 'url(#erd-one-rev)';
   if (arrowType === 'erd-1-n') return 'url(#erd-one-rev)';
-  return '';
+  return undefined;
 }
 
 function EdgeMarkerDefs() {
   return (
-    <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+    <svg
+      width="1"
+      height="1"
+      aria-hidden="true"
+      style={{ position: 'absolute', top: 0, left: 0, overflow: 'hidden', pointerEvents: 'none' }}
+    >
       <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b6f85" />
-        </marker>
-        <marker id="arrow-rev" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-          <path d="M 10 0 L 0 5 L 10 10 z" fill="#6b6f85" />
-        </marker>
-        <marker id="open-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-          <path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#6b6f85" strokeWidth="1.5" />
-        </marker>
         <marker id="erd-one" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-          <line x1="8" y1="0" x2="8" y2="10" stroke="#6b6f85" strokeWidth="2" />
+          <line x1="8" y1="0" x2="8" y2="10" stroke={MARKER_COLOR} strokeWidth="2" />
         </marker>
         <marker id="erd-one-rev" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
-          <line x1="2" y1="0" x2="2" y2="10" stroke="#6b6f85" strokeWidth="2" />
+          <line x1="2" y1="0" x2="2" y2="10" stroke={MARKER_COLOR} strokeWidth="2" />
         </marker>
         <marker id="erd-many" viewBox="0 0 12 10" refX="10" refY="5" markerWidth="12" markerHeight="10" orient="auto-start-reverse">
-          <path d="M 0 5 L 10 0 M 0 5 L 10 10 M 0 5 L 10 5" fill="none" stroke="#6b6f85" strokeWidth="1.5" />
+          <path d="M 0 5 L 10 0 M 0 5 L 10 10 M 0 5 L 10 5" fill="none" stroke={MARKER_COLOR} strokeWidth="1.5" />
         </marker>
         <marker id="erd-many-rev" viewBox="0 0 12 10" refX="2" refY="5" markerWidth="12" markerHeight="10" orient="auto-start-reverse">
-          <path d="M 12 5 L 2 0 M 12 5 L 2 10 M 12 5 L 2 5" fill="none" stroke="#6b6f85" strokeWidth="1.5" />
+          <path d="M 12 5 L 2 0 M 12 5 L 2 10 M 12 5 L 2 5" fill="none" stroke={MARKER_COLOR} strokeWidth="1.5" />
         </marker>
       </defs>
     </svg>
@@ -725,6 +728,7 @@ function DiagramEditor() {
       setEdges((eds) => {
         const newEdge = {
           ...connection,
+          type: getEdgeType(edgeStyle),
           animated: arrowType === 'arrow' || arrowType === 'open-arrow',
           style: getEdgeStyle(arrowType, lineWeight),
           markerEnd: getMarkerEnd(arrowType),
@@ -734,7 +738,17 @@ function DiagramEditor() {
       });
       triggerSave();
     },
-    [setEdges, triggerSave, arrowType, lineWeight]
+    [setEdges, triggerSave, arrowType, lineWeight, edgeStyle, getEdgeType]
+  );
+
+  // ── Double-click an edge to delete it ─────────────────────────────────────
+  const onEdgeDoubleClick = useCallback(
+    (e: React.MouseEvent, edge: Edge) => {
+      e.stopPropagation();
+      setEdges((eds) => eds.filter((ed) => ed.id !== edge.id));
+      triggerSave();
+    },
+    [setEdges, triggerSave]
   );
 
   // ── Drag & Drop from palette ──────────────────────────────────────────────
@@ -949,6 +963,35 @@ function DiagramEditor() {
     setNodes((nds) => nds.map((n) => n.id === nodeId ? { ...n, data: { ...n.data, label: newLabel } } : n));
     triggerSave();
   }, [setNodes, triggerSave]);
+
+  // ── Toggle collapsed state from props panel ───────────────────────────────
+  const toggleNodeCollapsed = useCallback((nodeId: string) => {
+    setNodes((nds) => nds.map((n) => n.id === nodeId ? { ...n, data: { ...n.data, collapsed: !(n.data as NodeData)?.collapsed } } : n));
+    triggerSave();
+  }, [setNodes, triggerSave]);
+
+  // ── Listen for per-node toolbar actions (collapse / edit / delete) ────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ id: string; action: 'toggle' | 'edit' | 'delete' }>).detail;
+      if (!detail) return;
+      const { id, action } = detail;
+      if (action === 'toggle') {
+        setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, collapsed: !(n.data as NodeData)?.collapsed } } : n));
+        triggerSave();
+      } else if (action === 'edit') {
+        const target = nodesRef.current.find((n) => n.id === id);
+        if (target) setEditingNode(target);
+      } else if (action === 'delete') {
+        setNodes((nds) => nds.filter((n) => n.id !== id));
+        setEdges((eds) => eds.filter((ed) => ed.source !== id && ed.target !== id));
+        if (selectedNodeForEdit?.id === id) { setSelectedNodeForEdit(null); setShowPropsPanel(false); }
+        triggerSave();
+      }
+    };
+    window.addEventListener('diagram:node-action', handler);
+    return () => window.removeEventListener('diagram:node-action', handler);
+  }, [setNodes, setEdges, triggerSave, selectedNodeForEdit?.id]);
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useEffect(() => {
@@ -1219,13 +1262,31 @@ function DiagramEditor() {
               edgeTypes={customEdgeTypes}
               onSelectionChange={onSelectionChange}
               onNodeDoubleClick={onNodeDoubleClick}
+              onEdgeDoubleClick={onEdgeDoubleClick}
+              connectionMode={ConnectionMode.Loose}
+              connectionLineType={
+                edgeStyle === 'straight'
+                  ? ConnectionLineType.Straight
+                  : edgeStyle === 'smoothstep'
+                  ? ConnectionLineType.SmoothStep
+                  : edgeStyle === 'step'
+                  ? ConnectionLineType.Step
+                  : ConnectionLineType.Bezier
+              }
+              connectionLineStyle={getEdgeStyle(arrowType, lineWeight)}
               fitView
               snapToGrid={snapToGrid}
               snapGrid={[25, 25]}
               deleteKeyCode={['Backspace', 'Delete']}
               className="focus-theme"
               colorMode={isDark ? 'dark' : 'light'}
-              defaultEdgeOptions={{ animated: true, type: edgeTypeForFlow }}
+              defaultEdgeOptions={{
+                animated: arrowType === 'arrow' || arrowType === 'open-arrow',
+                type: edgeTypeForFlow,
+                style: getEdgeStyle(arrowType, lineWeight),
+                markerEnd: getMarkerEnd(arrowType),
+                markerStart: getMarkerStart(arrowType),
+              }}
             >
               <Background color={isDark ? '#5c5d6a' : '#c0c0c8'} gap={snapToGrid ? 25 : 16} />
               <Controls showInteractive={false} />
@@ -1265,6 +1326,22 @@ function DiagramEditor() {
                     x: {Math.round(selectedNodeForEdit.position.x)}, y: {Math.round(selectedNodeForEdit.position.y)}
                   </div>
                 </div>
+                <button
+                  className="w-full py-1.5 rounded-md text-[0.72rem] font-medium bg-white/5 text-text-secondary hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                  onClick={() => toggleNodeCollapsed(selectedNodeForEdit.id)}
+                >
+                  {(selectedNodeForEdit.data as NodeData)?.collapsed ? (
+                    <>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 9V5a2 2 0 012-2h4M21 9V5a2 2 0 00-2-2h-4M3 15v4a2 2 0 002 2h4M21 15v4a2 2 0 01-2 2h-4" /></svg>
+                      Expand node
+                    </>
+                  ) : (
+                    <>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 3v4a2 2 0 01-2 2H3M15 3v4a2 2 0 002 2h4M9 21v-4a2 2 0 00-2-2H3M15 21v-4a2 2 0 012-2h4" /></svg>
+                      Minimise node
+                    </>
+                  )}
+                </button>
                 <button className="w-full py-1.5 rounded-md text-[0.72rem] font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
                   onClick={() => setEditingNode(selectedNodeForEdit)}>
                   Edit Text & Style
